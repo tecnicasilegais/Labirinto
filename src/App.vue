@@ -9,52 +9,60 @@
         <v-main class="grey lighten-3">
             <v-container>
                 <v-row>
-                    <v-col class="d-flex flex-column" cols="12" md="3" lg="4">
-                        <v-card rounded="lg" elevation="0" class="mb-6">
-                            <v-card-title>Parâmetros</v-card-title>
-                            <v-divider></v-divider>
-                            <v-skeleton-loader type="list-item,list-item,list-item,list-item,list-item,actions"
-                                               v-if="loading"></v-skeleton-loader>
-                            <v-card-text v-else>
-                                <label for="file_maze" class="pl-0">Arquivo de labirinto</label>
-                                <v-file-input class="mb-3" dense outlined hide-details="auto" v-model="maze.file"
-                                              @click="fileError = []"
-                                              :error-messages="fileError" small-chips
-                                              id="file_maze"></v-file-input>
+                    <v-col class="d-flex flex-column" cols="12" lg="4">
+                        <v-row>
+                            <v-col cols="12" sm="6" lg="12">
+                                <v-card rounded="lg" elevation="0">
+                                    <v-card-title>Parâmetros</v-card-title>
+                                    <v-divider></v-divider>
+                                    <v-skeleton-loader type="list-item,list-item,list-item,list-item,list-item,actions"
+                                                       v-if="loading"></v-skeleton-loader>
+                                    <v-card-text v-else>
+                                        <label for="file_maze" class="pl-0">Arquivo de labirinto</label>
+                                        <v-file-input class="mb-3" dense outlined hide-details="auto"
+                                                      v-model="maze.file"
+                                                      @click="fileError = []"
+                                                      :error-messages="fileError" small-chips
+                                                      id="file_maze"></v-file-input>
 
-                                <label for="cost_colision" class="pl-0">Custo de colisão</label>
-                                <v-slider class="mb-3" thumb-label hide-details min="0" max="100"
-                                          id="cost_colision"></v-slider>
+                                        <label for="cost_colision" class="pl-0">Custo de colisão</label>
+                                        <v-slider class="mb-3" thumb-label hide-details min="0" max="100"
+                                                  id="cost_colision"></v-slider>
 
-                                <label for="cost_exit" class="pl-0">Custo de saída</label>
-                                <v-slider class="mb-3" thumb-label hide-details min="0" max="100"
-                                          id="cost_exit"></v-slider>
+                                        <label for="cost_exit" class="pl-0">Custo de saída</label>
+                                        <v-slider class="mb-3" thumb-label hide-details min="0" max="100"
+                                                  id="cost_exit"></v-slider>
 
-                                <label for="rate_crossover" class="pl-0">Taxa de crossover</label>
-                                <v-slider class="mb-3" thumb-label hide-details min="0" max="100"
-                                          id="rate_crossover"></v-slider>
-                            </v-card-text>
-                            <v-divider></v-divider>
-                            <v-card-actions class="d-flex justify-center">
-                                <v-btn text color="primary" @click="importTxt">Try to solve!</v-btn>
-                            </v-card-actions>
-                        </v-card>
-                        <v-sheet rounded="lg" elevation="0">
-                            <v-card-title>Output</v-card-title>
-                            <v-divider></v-divider>
-                            <v-skeleton-loader type="list-item,list-item,list-item,list-item,list-item,list-item"
-                                               v-if="loading"></v-skeleton-loader>
-                            <v-card-text v-else v-highlight>
+                                        <label for="rate_crossover" class="pl-0">Taxa de crossover</label>
+                                        <v-slider class="mb-3" thumb-label hide-details min="0" max="100"
+                                                  id="rate_crossover"></v-slider>
+                                    </v-card-text>
+                                    <v-divider></v-divider>
+                                    <v-card-actions class="d-flex justify-center">
+                                        <v-btn text color="primary" @click="importTxt">Try to solve!</v-btn>
+                                    </v-card-actions>
+                                </v-card>
+                            </v-col>
+                            <v-col cols="12" sm="6" lg="12">
+                                <v-card rounded="lg" elevation="0">
+                                    <v-card-title>Output</v-card-title>
+                                    <v-divider></v-divider>
+                                    <v-skeleton-loader
+                                            type="list-item,list-item,list-item,list-item,list-item,list-item"
+                                            v-if="loading"></v-skeleton-loader>
+                                    <v-card-text v-else v-highlight>
                                 <pre class="language- ma-0">testando isso
 to em choque
 meudeus do ceu
 caramba
 isso nao pode ser</pre>
-                            </v-card-text>
-                        </v-sheet>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+                        </v-row>
                     </v-col>
 
-                    <v-col cols="12" md="9" lg="8">
+                    <v-col cols="12" lg="8">
                         <v-card rounded="lg" elevation="0">
                             <v-card-title>Labirinto</v-card-title>
                             <v-divider></v-divider>
