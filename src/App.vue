@@ -9,7 +9,7 @@
         <v-main class="grey lighten-3">
             <v-container>
                 <v-row>
-                    <v-col class="d-flex flex-column" cols="12" sm="4">
+                    <v-col class="d-flex flex-column" cols="12" md="3" lg="4">
                         <v-card rounded="lg" elevation="0" class="mb-6">
                             <v-card-title>Parâmetros</v-card-title>
                             <v-divider></v-divider>
@@ -54,7 +54,7 @@ isso nao pode ser</pre>
                         </v-sheet>
                     </v-col>
 
-                    <v-col cols="12" sm="8">
+                    <v-col cols="12" md="9" lg="8">
                         <v-card rounded="lg" elevation="0">
                             <v-card-title>Labirinto</v-card-title>
                             <v-divider></v-divider>
@@ -195,6 +195,8 @@ table.maze {
 
     > tr > td {
         height     : 48px;
+        min-height : 48px;
+        min-width  : 48px;
         width      : 48px;
         text-align : center;
 
