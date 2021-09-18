@@ -1,6 +1,6 @@
 module.exports = {
-	transpileDependencies: [
-		'vuetify'
-	],
-	publicPath           : '/Labirinto/'
+  transpileDependencies: [
+    'vuetify',
+  ],
+  publicPath: '/Labirinto/',
 };
