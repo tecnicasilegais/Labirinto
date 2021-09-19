@@ -39,8 +39,9 @@
                               id="rate_crossover"></v-slider>
                   </v-card-text>
                   <v-divider></v-divider>
-                  <v-card-actions class="d-flex justify-center">
-                    <v-btn text color="primary" @click="importTxt">Try to solve!</v-btn>
+                  <v-card-actions class="d-flex justify-space-around">
+                    <v-btn text color="primary" @click="importTxt">Import TXT</v-btn>
+                    <v-btn text color="primary" @click="solveMaze">Try to solve!</v-btn>
                   </v-card-actions>
                 </v-card>
               </v-col>
@@ -52,17 +53,15 @@
                     type="list-item,list-item,list-item,list-item,list-item,list-item"
                     v-if="loading"></v-skeleton-loader>
                   <v-card-text v-else>
-                                <pre class="language- ma-0">testando isso
-to em choque
-meudeus do ceu
-caramba
-isso nao pode ser</pre>
+                    <div class="console">
+                      <div class="console-top"></div>
+                      <pre class="ma-0" id="logger"></pre>
+                    </div>
                   </v-card-text>
                 </v-card>
               </v-col>
             </v-row>
           </v-col>
-
           <v-col cols="12" lg="8">
             <v-card rounded="lg" elevation="0">
               <v-card-title>Labirinto</v-card-title>
@@ -81,8 +80,8 @@ isso nao pode ser</pre>
                         <td :style="maze.background.l"></td>
                         <td v-for="(cell, j) in line" :key="j" :style="maze.background.grass">
                           <div v-if="cell === 'wall'" :style="maze.walls[(i+j)%4]"></div>
-                          <div v-else-if="cell === 'entr'" :style="maze.doors.entrance"></div>
-                          <div v-else-if="cell === 'exit'" :style="maze.doors.exit"></div>
+                          <div v-else-if="cell === 'E'" :style="maze.doors.entrance"></div>
+                          <div v-else-if="cell === 'S'" :style="maze.doors.exit"></div>
                         </td>
                         <td :style="maze.background.r"></td>
                       </tr>
@@ -109,15 +108,12 @@ isso nao pode ser</pre>
 <script>
 import 'vue-code-highlight/themes/prism-okaidia.css';
 import 'vue-code-highlight/themes/window.css';
+import { findPath } from '@/app';
 
 export default {
   data: () => ({
     loading: false,
     maze: {
-      file: null,
-      rawContent: null,
-      parsedContent: null,
-      size: null,
       background: {
         grass: { backgroundImage: `url(${require('@/assets/grass.png')})` },
         tl: { backgroundImage: `url(${require('@/assets/tl.png')})` },
@@ -129,20 +125,31 @@ export default {
         b: { backgroundImage: `url(${require('@/assets/b.png')})` },
         br: { backgroundImage: `url(${require('@/assets/br.png')})` },
       },
+      doors: {
+        entrance: { backgroundImage: `url(${require('@/assets/entrance.png')})` },
+        exit: { backgroundImage: `url(${require('@/assets/exit.png')})` },
+      },
+      position: {
+        entrance: [],
+        exit: [],
+      },
+      file: null,
+      parsedContent: null,
+      rawContent: null,
+      size: null,
       walls: [
         { backgroundImage: `url(${require('@/assets/w1.png')})` },
         { backgroundImage: `url(${require('@/assets/w2.png')})` },
         { backgroundImage: `url(${require('@/assets/w3.png')})` },
         { backgroundImage: `url(${require('@/assets/w4.png')})` },
       ],
-      doors: {
-        entrance: { backgroundImage: `url(${require('@/assets/entrance.png')})` },
-        exit: { backgroundImage: `url(${require('@/assets/exit.png')})` },
-      },
     },
     fileError: [],
   }),
   methods: {
+    solveMaze() {
+      findPath(this.maze.parsedContent, {});
+    },
     importTxt() {
       if (!this.maze.file) {
         this.maze.rawContent = null;
@@ -163,18 +170,16 @@ export default {
         }
 
         this.maze.parsedContent = [];
-        for (let i = 0; i <= this.maze.size; i++) {
+        for (let i = 0; i < this.maze.size; i++) {
           const convertedLine = rawLines[i].split(' ');
           for (let j = 0; j < this.maze.size; j++) {
             const cell = convertedLine[j];
             switch (cell) {
               case 'E':
-                convertedLine[j] = 'entr';
-                this.maze.position.entrance = { line: i, col: j };
+                this.maze.position.entrance = [i, j];
                 break;
               case 'S':
-                convertedLine[j] = 'exit';
-                this.maze.position.exit = { line: i, col: j };
+                this.maze.position.exit = [i, j];
                 break;
               case '0':
                 convertedLine[j] = '';
@@ -200,6 +205,76 @@ export default {
 </script>
 
 <style lang="scss">
+.console {
+  display        : flex;
+  flex-direction : column;
+
+  .console-top {
+    background-color    : #444;
+    background-image    : url('data:image/svg+xml;utf8, <svg xmlns="http://www.w3.org/2000/svg" width="54" height="14" viewBox="0 0 54 14"><g fill="none" fillRule="evenodd" transform="translate(1 1)"><circle cx="6" cy="6" r="6" fill="%23FF5F56" stroke="%23E0443E" strokeWidth=".5" /><circle cx="26" cy="6" r="6" fill="%23FFBD2E" stroke="%23DEA123" strokeWidth=".5" /><circle cx="46" cy="6" r="6" fill="%2327C93F" stroke="%231AAB29" strokeWidth=".5" /></g></svg>');
+    background-position : 15px 10px;
+    background-repeat   : no-repeat;
+    border-radius       : 10px 10px 0 0;
+    display             : inline-block;
+    height              : 35px;
+    width               : 100%;
+
+    + pre {
+      background-color : #272822;
+      color-scheme     : dark;
+      border-radius    : 0 0 10px 10px;
+      color            : #fff;
+      font-family      : Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+      hyphens          : none;
+      line-height      : 1.5;
+      margin           : .5em 0;
+      max-height       : 288px;
+      overflow         : auto;
+      padding          : 5px 15px 15px;
+      tab-size         : 4;
+      text-align       : left;
+      text-shadow      : 0 1px rgba(0, 0, 0, 0.3);
+      white-space      : pre;
+      word-break       : normal;
+      word-spacing     : normal;
+      word-wrap        : normal;
+    }
+  }
+}
+
+::-webkit-scrollbar {
+  width : 10px;
+}
+
+::-webkit-scrollbar-button {
+  height : 0;
+  width  : 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background    : #999;
+  border        : 0 none #ffffff;
+  border-radius : 50px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background : #bbb;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background : #000;
+}
+
+::-webkit-scrollbar-track {
+  background    : #3a3a3a;
+  border        : none;
+  border-radius : 50px;
+}
+
+::-webkit-scrollbar-corner {
+  background : transparent;
+}
+
 table.maze {
   border          : none;
   border-collapse : collapse;

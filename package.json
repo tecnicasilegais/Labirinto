@@ -34,11 +34,14 @@
     "extends": ["plugin:vue/essential", "eslint:recommended", "@vue/airbnb"],
     "parserOptions": {"parser": "babel-eslint"},
     "rules": {
-      "no-plusplus": ["error", {"allowForLoopAfterthoughts": true}],
       "global-require": "off",
-      "prefer-destructuring": "error",
       "import/prefer-default-export": "off",
-      "no-use-before-define": ["error", {"functions": false}]
+      "no-console": "off",
+      "no-restricted-syntax": "off",
+      "no-param-reassign": "off",
+      "no-plusplus": "off",
+      "no-use-before-define": ["error", {"functions": false}],
+      "prefer-destructuring": "error"
     }
   },
   "browserslist": [
