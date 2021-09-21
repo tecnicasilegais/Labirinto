@@ -54,8 +54,12 @@
                     v-if="loading"></v-skeleton-loader>
                   <v-card-text v-else>
                     <div class="console">
-                      <div class="console-top"></div>
-                      <pre class="ma-0" id="logger"></pre>
+                      <div class="console-top d-flex">
+                        <v-spacer></v-spacer>
+                        <v-icon @click="clearConsole" color="white" class="mr-2">mdi-delete-sweep
+                        </v-icon>
+                      </div>
+                      <pre class="ma-0" ref="logger">{{ output }}</pre>
                     </div>
                   </v-card-text>
                 </v-card>
@@ -108,10 +112,11 @@
 <script>
 import 'vue-code-highlight/themes/prism-okaidia.css';
 import 'vue-code-highlight/themes/window.css';
-import { findPath } from '@/app';
+import { teste } from '@/app';
 
 export default {
   data: () => ({
+    fileError: [],
     loading: false,
     maze: {
       background: {
@@ -144,11 +149,15 @@ export default {
         { backgroundImage: `url(${require('@/assets/w4.png')})` },
       ],
     },
-    fileError: [],
+    output: '',
   }),
   methods: {
+    clearConsole() {
+      this.output = '';
+    },
     solveMaze() {
-      findPath(this.maze.parsedContent, {});
+      this.output += teste();
+      // findPath(this.maze.parsedContent, {});
     },
     importTxt() {
       if (!this.maze.file) {
@@ -200,7 +209,6 @@ export default {
       this.fileError = [];
     },
   },
-
 };
 </script>
 
@@ -224,6 +232,8 @@ export default {
       color-scheme     : dark;
       border-radius    : 0 0 10px 10px;
       color            : #fff;
+      display          : flex;
+      flex-direction   : column-reverse;
       font-family      : Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
       hyphens          : none;
       line-height      : 1.5;

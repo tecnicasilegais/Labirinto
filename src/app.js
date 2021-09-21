@@ -1,3 +1,11 @@
+export function teste() {
+  let output = '';
+  for (let i = 0; i < 25; i++) {
+    output += `${i}\n`;
+  }
+  return output;
+}
+
 export function findPath(maze, { entrance, exit }) {
   const limits = {
     top: 0, bottom: maze.length - 1, right: maze[0].length - 1, left: 0,
@@ -36,7 +44,10 @@ function testPath(maze, { entrance, exit }, limits, path) {
       console.log('Out of limits');
       return false;
     }
-    if (...nextPos == ...exit)
+    if (nextPos[0] === exit[0]
+        && nextPos[1] === exit[1]) {
+      console.log('Arrived at exit');
+    }
     currPos = [...nextPos];
   }
   return false;
@@ -53,32 +64,3 @@ function generateString(length) {
 
   return result;
 }
-
-(function (logger, ...args) {
-  console.old = console.log;
-  console.log = function () {
-    let output = '';
-    let arg;
-    let i;
-
-    for (i = 0; i < arguments.length; i++) {
-      arg = args[i];
-      output += `<span class="log-${typeof arg}">`;
-
-      if (
-        typeof arg === 'object'
-        && typeof JSON === 'object'
-        && typeof JSON.stringify === 'function'
-      ) {
-        output += JSON.stringify(arg);
-      } else {
-        output += arg;
-      }
-
-      output += '</span>&nbsp;';
-    }
-
-    logger.innerHTML += `${output}<br>`;
-    console.old.apply(undefined, args);
-  };
-})(document.getElementById('logger'));
