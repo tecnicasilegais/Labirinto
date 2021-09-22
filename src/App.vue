@@ -83,7 +83,7 @@
                       <tr v-for="(line, i) in maze.parsedContent" :key="i">
                         <td :style="maze.background.l"></td>
                         <td v-for="(cell, j) in line" :key="j" :style="maze.background.grass">
-                          <div v-if="cell === 'wall'" :style="maze.walls[(i+j)%4]"></div>
+                          <div v-if="cell === '1'" :style="maze.walls[(i+j)%4]"></div>
                           <div v-else-if="cell === 'E'" :style="maze.doors.entrance"></div>
                           <div v-else-if="cell === 'S'" :style="maze.doors.exit"></div>
                         </td>
@@ -185,17 +185,13 @@ export default {
             const cell = convertedLine[j];
             switch (cell) {
               case 'E':
-                this.maze.position.entrance = [i, j];
+                this.maze.position.entrance = { line: i, col: j };
                 break;
               case 'S':
-                this.maze.position.exit = [i, j];
+                this.maze.position.exit = { line: i, col: j };
                 break;
               case '0':
-                convertedLine[j] = '';
-                break;
               case '1':
-                convertedLine[j] = 'wall';
-                break;
               default:
                 break;
             }
