@@ -112,7 +112,7 @@
 <script>
 import 'vue-code-highlight/themes/prism-okaidia.css';
 import 'vue-code-highlight/themes/window.css';
-import { findPath, structuredClone } from '@/app';
+import { findPath/* , structuredClone */ } from '@/app';
 
 export default {
   data: () => ({
@@ -158,7 +158,7 @@ export default {
     solveMaze() {
       const {
         workingPath, output,
-      } = findPath(structuredClone(this.maze.parsedContent), this.maze.position);
+      } = findPath(this.maze.parsedContent, this.maze.position);
       this.output += output;
       console.log(workingPath);
     },
