@@ -1,9 +1,14 @@
-export function teste() {
-  let output = '';
-  for (let i = 0; i < 25; i++) {
-    output += `${i}\n`;
-  }
-  return output;
+import v8 from 'v8';
+
+const characters = 'UDRL';
+let _maze;
+let _entrance;
+let _exit;
+let _limits;
+let _output;
+
+function alreadyVisited(cell) {
+  return cell.wasVisited === true;
 }
 
 /**
@@ -12,38 +17,37 @@ export function teste() {
  * @returns {boolean} - boolean indicating if a wall was hit
  */
 function hitsWall(nextCell) {
-  return nextCell === '1';
+  return nextCell.content === '1';
 }
 
 /**
  * Checks if a given position is outside the bounds of the given top, bottom, right and left limits
  * @param position - position to check
- * @param limits - maze limits (top, bottom, right, left)
  * @returns {boolean} - boolean indicating if the position is outside the maze
  */
-function outOfMaze(position, limits) {
-  return position.line < limits.top || position.line > limits.bottom
-         || position.col < limits.left || position.col > limits.right;
+function outOfMaze(position) {
+  return position.line < _limits.top || position.line > _limits.bottom
+         || position.col < _limits.left || position.col > _limits.right;
 }
 
 /**
  * Calculates number of movements from current position to exit position
  * @param currPos - current position
- * @param exit - exit position
  * @returns {number} - number of movements to get to exit
  */
-function nOfMovementsToExit(currPos, exit) {
-  return Math.abs(currPos.line - exit.line) + Math.abs(currPos.col - exit.col);
+function nOfMovementsToExit(currPos) {
+  return Math.abs(currPos.line - _exit.line) + Math.abs(currPos.col - _exit.col);
 }
 
-function fitness(maze, entrance, exit, limits, path) {
+function calculateFitness(path) {
   let fitness = 0;
 
-  let currPosition = entrance;
+  const currPosition = { line: _entrance.line, col: _entrance.col };
 
   // Para cada movimento, verificar se está mais perto da saída, atravessa paredes ou sai do mapa,
   // verificar distancia ao final e somar quantidade de movimentos restantes
   for (const movement of path) {
+    _maze[currPosition.line][currPosition.col].wasVisited = true;
     switch (movement) {
       case 'U':
         currPosition.line--;
@@ -60,17 +64,23 @@ function fitness(maze, entrance, exit, limits, path) {
       default:
         throw new Error('Invalid movement');
     }
-    if (hitsWall(maze[currPosition.line][currPosition.col])) {
+    if (outOfMaze(currPosition)) {
       fitness++;
-    }
-    if (outOfMaze(currPosition, limits)) {
-      fitness++;
+    } else {
+      if (hitsWall(_maze[currPosition.line][currPosition.col])) {
+        fitness++;
+      }
+      if (alreadyVisited(_maze[currPosition.line][currPosition.col])) {
+        fitness++;
+      }
     }
   }
-  fitness += nOfMovementsToExit(currPosition, exit);
-}
 
-const characters = 'UDRL';
+  const movToExit = nOfMovementsToExit(currPosition);
+  fitness += movToExit;
+  _output += `indivíduo '${path}', aptidão '${fitness}', distânciaSaída '${movToExit}'\n`;
+  return fitness;
+}
 
 /**
  * Tries to find a path that solves the maze using the Simulated Annealing method
@@ -79,29 +89,38 @@ const characters = 'UDRL';
  * @param exit
  */
 export function findPath(maze, { entrance, exit }) {
-  const limits = {
-    top: 0, bottom: maze.length - 1, right: maze[0].length - 1, left: 0,
+  _output = '';
+  _maze = maze;
+  _entrance = entrance;
+  _exit = exit;
+  _limits = {
+    top: 0, bottom: _maze.length - 1, right: _maze[0].length - 1, left: 0,
   };
 
-  const initialPath = generateString(characters, maze.length * 3);
-  const workingPath = fitness(maze, entrance, exit, limits, initialPath);
-  if (workingPath) {
+  const initialPath = generateString(_maze.length * 3);
+  const workingPath = calculateFitness(initialPath);
+  if (workingPath === 0) {
     console.log('Random path already working');
   }
+
+  return { workingPath, output: _output };
 }
 
 /**
  * Generates a string using the given characters
- * @param usedCharacters - characters that will compose the string
  * @param length - length of the string
  * @returns {string} - random string
  */
-function generateString(usedCharacters, length) {
+function generateString(length) {
   let result = '';
-  const charactersLength = usedCharacters.length;
+  const charactersLength = characters.length;
   for (let i = 0; i < length; i++) {
-    result += usedCharacters.charAt(Math.floor(Math.random() * charactersLength));
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
-
+  result = 'RRRRDDLLLDDRDRDDDDDDRRRRRD';
   return result;
+}
+
+export function structuredClone(obj) {
+  return v8.deserialize(v8.serialize(obj));
 }
