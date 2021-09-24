@@ -33,10 +33,6 @@
                     <label for="cost_exit" class="pl-0">Custo de saída</label>
                     <v-slider class="mb-3" thumb-label hide-details min="0" max="100"
                               id="cost_exit"></v-slider>
-
-                    <label for="rate_crossover" class="pl-0">Taxa de crossover</label>
-                    <v-slider class="mb-3" thumb-label hide-details min="0" max="100"
-                              id="rate_crossover"></v-slider>
                   </v-card-text>
                   <v-divider></v-divider>
                   <v-card-actions class="d-flex justify-space-around">
@@ -112,7 +108,8 @@
 <script>
 import 'vue-code-highlight/themes/prism-okaidia.css';
 import 'vue-code-highlight/themes/window.css';
-import { findPath/* , structuredClone */ } from '@/app';
+import { findPath } from '@/app';
+import CloneDeep from 'lodash/cloneDeep';
 
 export default {
   data: () => ({
@@ -158,7 +155,7 @@ export default {
     solveMaze() {
       const {
         workingPath, output,
-      } = findPath(this.maze.parsedContent, this.maze.position);
+      } = findPath(CloneDeep(this.maze.parsedContent), this.maze.position);
       this.output += output;
       console.log(workingPath);
     },

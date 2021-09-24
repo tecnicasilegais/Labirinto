@@ -1,4 +1,4 @@
-// import v8 from 'v8';
+
 
 const characters = 'UDRL';
 let _maze;
@@ -120,7 +120,3 @@ function generateString(length) {
   result = 'RRRRDDLLLDDRDRDDDDDDRRRRRD';
   return result;
 }
-
-//  export function structuredClone(obj) {
-// return v8.deserialize(v8.serialize(obj));
-// }
