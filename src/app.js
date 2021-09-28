@@ -1,3 +1,5 @@
+import * as rn from 'random-number';
+
 const characters = 'UDRL';
 let _maze;
 let _entrance;
@@ -100,7 +102,11 @@ export function findPath(maze, { entrance, exit }, parameters) {
   const initialPath = generateString(1);
   const workingPath = calculateFitness(initialPath);
 
+  const randomNumber = rn();
+  _output += `${randomNumber}\n`;
+
   //TODO: ciclos e temperatura
+  //Conforme temperatura abaixa, muda menos os movimentos iniciais
 
   _output += '\n';
   return { workingPath, output: _output };
