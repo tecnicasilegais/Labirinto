@@ -19,16 +19,52 @@
                     type="list-item,list-item,list-item,list-item,list-item,actions"
                     v-if="loading"></v-skeleton-loader>
                   <v-card-text v-else>
-                    <label for="file_maze" class="pl-0">Arquivo de labirinto</label>
-                    <v-file-input class="mb-3" dense outlined hide-details="auto"
-                                  v-model="maze.file"
-                                  @click="fileError = []"
-                                  :error-messages="fileError" small-chips
-                                  id="file_maze"></v-file-input>
+                    <v-row dense>
+                      <v-col>
+                        <label for="file_maze" class="pl-0">Arquivo de labirinto</label>
+                        <v-file-input class="my-1" dense outlined hide-details="auto" small-chips
+                                      v-model="maze.file" @click="fileError = []"
+                                      :error-messages="fileError"
+                                      id="file_maze"></v-file-input>
+                      </v-col>
+                      <v-col>
+                        <label for="cycles" class="pl-0">Ciclos (em milhares)</label>
+                        <v-slider v-model="parameters.cycles" dense thumb-label hide-details
+                                  step="10" min="10" max="1000" id="cycles">
+                          <template v-slot:prepend class="ma-0">
+                            <v-text-field class="ma-0" v-model="parameters.cycles" hide-details dense
+                                          outlined single-line type="number" style="width: 80px">
+                            </v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                    </v-row>
+                    <v-row dense>
+                      <v-col>
+                        <label for="temperature_initial" class="pl-0">Temperatura Inicial</label>
+                        <v-slider v-model="parameters.tempInitial" dense thumb-label hide-details
+                                  min="0" max="100" id="temperature_initial">
+                          <template v-slot:prepend>
+                            <v-text-field v-model="parameters.tempInitial" hide-details dense
+                                          outlined single-line type="number" style="width: 80px">
+                            </v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                      <v-col>
+                        <label for="temperature_variation" class="pl-0">Variação da
+                          Temperatura</label>
+                        <v-slider v-model="parameters.tempVariation" dense thumb-label hide-details
+                                  min="0" max="100" id="temperature">
+                          <template v-slot:prepend>
+                            <v-text-field v-model="parameters.tempVariation" hide-details dense
+                                          outlined single-line type="number" style="width: 80px">
 
-                    <label for="cost_colision" class="pl-0">Temperatura</label>
-                    <v-slider class="mb-3" thumb-label hide-details min="0" max="100"
-                              id="cost_colision"></v-slider>
+                            </v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                    </v-row>
                   </v-card-text>
                   <v-divider></v-divider>
                   <v-card-actions class="d-flex justify-space-around">
@@ -111,6 +147,11 @@ export default {
   data: () => ({
     fileError: [],
     loading: false,
+    parameters: {
+      cycles: 1000000,
+      tempInitial: 100,
+      tempVariation: 20,
+    },
     maze: {
       background: {
         grass: { backgroundImage: `url(${require('@/assets/grass.png')})` },
@@ -151,7 +192,7 @@ export default {
     solveMaze() {
       const {
         workingPath, output,
-      } = findPath(CloneDeep(this.maze.parsedContent), this.maze.position);
+      } = findPath(CloneDeep(this.maze.parsedContent), this.maze.position, this.parameters);
       this.output += output;
       console.log(workingPath);
     },

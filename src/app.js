@@ -1,5 +1,3 @@
-
-
 const characters = 'UDRL';
 let _maze;
 let _entrance;
@@ -88,7 +86,7 @@ function calculateFitness(path) {
  * @param entrance
  * @param exit
  */
-export function findPath(maze, { entrance, exit }) {
+export function findPath(maze, { entrance, exit }, parameters) {
   _output = '';
   _maze = maze;
   _entrance = entrance;
@@ -97,11 +95,14 @@ export function findPath(maze, { entrance, exit }) {
     top: 0, bottom: _maze.length - 1, right: _maze[0].length - 1, left: 0,
   };
 
+  _output += `ciclos: ${parameters.cycles}, tempInicial: ${parameters.tempInitial}, variaçãoTemp: ${parameters.tempVariation}\n`;
+
   const initialPath = generateString(1);
   const workingPath = calculateFitness(initialPath);
 
   //TODO: ciclos e temperatura
 
+  _output += '\n';
   return { workingPath, output: _output };
 }
 
