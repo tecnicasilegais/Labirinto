@@ -76,7 +76,7 @@ function calculateFitness(path) {
     }
   }
 
-  const movToExit = nOfMovementsToExit(currPosition);
+  const movToExit = nOfMovementsToExit(currPosition);//TODO: Talvez problematico?
   fitness += movToExit;
   _output += `indivíduo '${path}', aptidão '${fitness}', distânciaSaída '${movToExit}'\n`;
   return fitness;
@@ -97,11 +97,10 @@ export function findPath(maze, { entrance, exit }) {
     top: 0, bottom: _maze.length - 1, right: _maze[0].length - 1, left: 0,
   };
 
-  const initialPath = generateString(_maze.length * 3);
+  const initialPath = generateString(1);
   const workingPath = calculateFitness(initialPath);
-  if (workingPath === 0) {
-    console.log('Random path already working');
-  }
+
+  //TODO: ciclos e temperatura
 
   return { workingPath, output: _output };
 }
@@ -117,6 +116,5 @@ function generateString(length) {
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
-  result = 'RRRRDDLLLDDRDRDDDDDDRRRRRD';
   return result;
 }

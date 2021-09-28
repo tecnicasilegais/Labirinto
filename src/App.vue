@@ -26,13 +26,9 @@
                                   :error-messages="fileError" small-chips
                                   id="file_maze"></v-file-input>
 
-                    <label for="cost_colision" class="pl-0">Custo de colisão</label>
+                    <label for="cost_colision" class="pl-0">Temperatura</label>
                     <v-slider class="mb-3" thumb-label hide-details min="0" max="100"
                               id="cost_colision"></v-slider>
-
-                    <label for="cost_exit" class="pl-0">Custo de saída</label>
-                    <v-slider class="mb-3" thumb-label hide-details min="0" max="100"
-                              id="cost_exit"></v-slider>
                   </v-card-text>
                   <v-divider></v-divider>
                   <v-card-actions class="d-flex justify-space-around">
