@@ -39,7 +39,7 @@ function nOfMovementsToExit(currPos) {
   return Math.abs(currPos.line - _exit.line) + Math.abs(currPos.col - _exit.col);
 }
 
-function buildNextPath(path) {
+function buildNextPath(path, parameters) {
 
   let hit = false;
   const currPosition = { line: _entrance.line, col: _entrance.col };
@@ -77,33 +77,33 @@ function buildNextPath(path) {
   }
 
   //TODO: essas 2 vars precisam vir do front
-  prctFixed = 0.6; //porcentagem de vezes que ele resolve o primeiro errado 
-  prctGoodChoice = 0.6
+  const prctFixed = parameters.prctFixed; //porcentagem de vezes que ele resolve o primeiro errado
+  const prctGoodChoice = parameters.prctGoodChoice;
 
-  firstWrong //primeiro nodo incorreto no path
+  //let firstWrong; //primeiro nodo incorreto no path
 
-  let fixOptions = []//ao percorrer o path, posso pegar as possibilidades junto e as posições delas pra talvez modificar elas
+  let fixOptions = [];//ao percorrer o path, posso pegar as possibilidades junto e as posições delas pra talvez modificar elas
 
   //TODO: ao criar o _maze podemos adicionar um atributo que mostre as possibilidades de movimento do nodo
 
-  if(!hit) {
-      let options = 'CDBE';
-      path += options[Math.random()|0];
+  const options = 'CDBE';
+  if (!hit) {
+    path += options[Math.random() | 0];
   } else {
-    porcentage = Math.random();
-    if (prctFixed >= porcentage) {
-        //Caso tenha que arrumar o primeiro errado
-          //tenta modificar para uma das possibilidades de movimento
-          //ou caso nao tenha possibilidades, pega aleatoriamente umas das outras 3 opções de movimento
-    }else {
+    let percentage = Math.random();
+    if (prctFixed >= percentage) {
+      //Caso tenha que arrumar o primeiro errado
+      //tenta modificar para uma das possibilidades de movimento
+      //ou caso nao tenha possibilidades, pega aleatoriamente umas das outras 3 opções de movimento
+    } else {
       //caso que pega uma posição aleatoria da sequencia e muda conforme a porcentagem de escolhas boas
       let pos = Math.random() * fixOptions.size();
-      if(prctGoodChoice <= Math.random()){
+      if (prctGoodChoice <= Math.random()) {
         //caso que pega a posição escolhida e bota um movimento aleatoria diferente do atual
-        move = options[Math.random() * options, 10|0];
+        //let move = options[Math.random() * options, 10 | 0];
         //MODIFICAR AQUI, TA ERRADO
-        path[pos] = options[Math.random() * options, 10|0];
-      }else {
+        path[pos] = options[Math.random() * options, 10 | 0];
+      } else {
         //caso que pega a posição escolhida e bota um movimento válido
       }
     }
@@ -158,6 +158,7 @@ function calculateFitness(path) {
  * @param maze
  * @param entrance
  * @param exit
+ * @param parameters
  */
 export function findPath(maze, { entrance, exit }, parameters) {
   _output = '';
@@ -171,7 +172,7 @@ export function findPath(maze, { entrance, exit }, parameters) {
   _output += `ciclos: ${parameters.cycles}, tempInicial: ${parameters.tempInitial}, variaçãoTemp: ${parameters.tempVariation}\n`;
 
   const currentPath = generateString(1);
-  const nextPath;
+  //let nextPath;
   const workingPath = calculateFitness(currentPath);
 
   const randomNumber = rn();
@@ -180,10 +181,10 @@ export function findPath(maze, { entrance, exit }, parameters) {
 
   //Start the cycle until numInteractions is reached
   for (let i = 0; i <= parameters.cycles; i++) {
-    
+    buildNextPath(maze, parameters);//Errado
     //get heuristic of currently path
     // if h(currently) == 0 -> end of algorithm
-    nextPath = buildNextPath(currentPath)
+    //nextPath = buildNextPath(currentPath, parameters);
 
 
   }

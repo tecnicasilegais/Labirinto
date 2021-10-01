@@ -20,7 +20,7 @@
                     v-if="loading"></v-skeleton-loader>
                   <v-card-text v-else>
                     <v-row dense>
-                      <v-col>
+                      <v-col class="pr-5">
                         <label for="file_maze" class="pl-0">Arquivo de labirinto</label>
                         <v-file-input class="my-1" dense outlined hide-details="auto" small-chips
                                       v-model="maze.file" @click="fileError = []"
@@ -29,36 +29,124 @@
                       </v-col>
                       <v-col>
                         <label for="cycles" class="pl-0">Ciclos (em milhares)</label>
-                        <v-slider v-model="parameters.cycles" dense thumb-label hide-details
-                                  step="10" min="10" max="1000" id="cycles">
+                        <v-slider v-model="parameters.cycles.value" dense thumb-label hide-details
+                                  id="cycles"
+                                  :max="parameters.cycles.max"
+                                  :min="parameters.cycles.min"
+                                  :step="parameters.cycles.step">
                           <template v-slot:prepend class="ma-0">
-                            <v-text-field class="ma-0" v-model="parameters.cycles" hide-details dense
-                                          outlined single-line type="number" style="width: 80px">
+                            <v-text-field class="ma-0" v-model="parameters.cycles.value" outlined
+                                          dense hide-details single-line type="number"
+                                          style="width: 85px">
                             </v-text-field>
                           </template>
                         </v-slider>
                       </v-col>
                     </v-row>
                     <v-row dense>
-                      <v-col>
-                        <label for="temperature_initial" class="pl-0">Temperatura Inicial</label>
-                        <v-slider v-model="parameters.tempInitial" dense thumb-label hide-details
-                                  min="0" max="100" id="temperature_initial">
+                      <v-col class="pr-5">
+                        <label for="temperature_initial" class="pl-0">Temperatura inicial</label>
+                        <v-slider v-model="parameters.tempInitial.value" dense thumb-label
+                                  hide-details
+                                  id="temperature_initial"
+                                  :max="parameters.tempInitial.max"
+                                  :min="parameters.tempInitial.min"
+                                  :step="parameters.tempInitial.step">
                           <template v-slot:prepend>
-                            <v-text-field v-model="parameters.tempInitial" hide-details dense
-                                          outlined single-line type="number" style="width: 80px">
+                            <v-text-field v-model="parameters.tempInitial.value" hide-details dense
+                                          outlined single-line type="number" style="width: 85px"
+                                          suffix="°C">
                             </v-text-field>
                           </template>
                         </v-slider>
                       </v-col>
                       <v-col>
                         <label for="temperature_variation" class="pl-0">Variação da
-                          Temperatura</label>
-                        <v-slider v-model="parameters.tempVariation" dense thumb-label hide-details
-                                  min="0" max="100" id="temperature">
+                          temperatura</label>
+                        <v-slider v-model="parameters.tempVariation.value" dense thumb-label
+                                  hide-details
+                                  id="temperature_variation"
+                                  :max="parameters.tempVariation.max"
+                                  :min="parameters.tempVariation.min"
+                                  :step="parameters.tempVariation.step">
                           <template v-slot:prepend>
-                            <v-text-field v-model="parameters.tempVariation" hide-details dense
-                                          outlined single-line type="number" style="width: 80px">
+                            <v-text-field v-model="parameters.tempVariation.value" hide-details
+                                          dense
+                                          outlined single-line type="number" style="width: 85px"
+                                          suffix="°C">
+
+                            </v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                    </v-row>
+                    <v-row dense>
+                      <v-col class="pr-5">
+                        <label for="percentage_wrong" class="pl-0">Chance de escolha de vizinho
+                          ruim</label>
+                        <v-slider v-model="parameters.percentageWrong.value" dense thumb-label
+                                  hide-details id="percentage_wrong"
+                                  :max="parameters.percentageWrong.max"
+                                  :min="parameters.percentageWrong.min"
+                                  :step="parameters.percentageWrong.step">
+                          <template v-slot:prepend>
+                            <v-text-field v-model="parameters.percentageWrong.value" hide-details
+                                          dense
+                                          outlined single-line type="number" style="width: 85px"
+                                          suffix="%">
+                            </v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                      <v-col>
+                        <label for="percentage_good" class="pl-0">Chance de escolha de vizinho
+                          bom</label>
+                        <v-slider v-model="parameters.percentageGood.value" dense thumb-label
+                                  hide-details
+                                  id="percentage_good"
+                                  :max="parameters.percentageGood.max"
+                                  :min="parameters.percentageGood.min"
+                                  :step="parameters.percentageGood.step">
+                          <template v-slot:prepend>
+                            <v-text-field v-model="parameters.percentageGood.value" hide-details
+                                          dense
+                                          outlined single-line type="number" style="width: 85px"
+                                          suffix="%">
+
+                            </v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                    </v-row>
+                    <v-row dense>
+                      <v-col class="pr-5">
+                        <label for="path_weight_exit" class="pl-0">Peso de saída do
+                          labirinto</label>
+                        <v-slider v-model="parameters.pathWeightExit.value" dense thumb-label
+                                  hide-details id="path_weight_exit"
+                                  :max="parameters.pathWeightExit.max"
+                                  :min="parameters.pathWeightExit.min"
+                                  :step="parameters.pathWeightExit.step">
+                          <template v-slot:prepend>
+                            <v-text-field v-model="parameters.pathWeightExit.value" hide-details
+                                          dense
+                                          outlined single-line type="number" style="width: 85px">
+                            </v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                      <v-col>
+                        <label for="path_weight_repeat" class="pl-0">Peso de caminho
+                          repetido</label>
+                        <v-slider v-model="parameters.pathWeightRepeat.value" dense thumb-label
+                                  hide-details id="path_weight_repeat"
+                                  :max="parameters.pathWeightRepeat.max"
+                                  :min="parameters.pathWeightRepeat.min"
+                                  :step="parameters.pathWeightRepeat.step">
+                          <template v-slot:prepend>
+                            <v-text-field v-model="parameters.pathWeightRepeat.value" hide-details
+                                          dense outlined single-line type="number"
+                                          style="width: 85px">
 
                             </v-text-field>
                           </template>
@@ -104,23 +192,25 @@
                   <v-col v-if="maze.rawContent" class="d-flex justify-center">
                     <table class="maze">
                       <tr>
-                        <td :style="maze.background.tl"></td>
-                        <td :style="maze.background.t" v-for="i in maze.size" :key="i"></td>
-                        <td :style="maze.background.tr"></td>
+                        <td :style="images.background.tl"></td>
+                        <td :style="images.background.t" v-for="i in maze.size" :key="i"></td>
+                        <td :style="images.background.tr"></td>
                       </tr>
                       <tr v-for="(line, i) in maze.parsedContent" :key="i">
-                        <td :style="maze.background.l"></td>
-                        <td v-for="(cell, j) in line" :key="j" :style="maze.background.grass">
-                          <div v-if="cell.content === '1'" :style="maze.walls[(i+j)%4]"></div>
-                          <div v-else-if="cell.content === 'E'" :style="maze.doors.entrance"></div>
-                          <div v-else-if="cell.content === 'S'" :style="maze.doors.exit"></div>
+                        <td :style="images.background.l"></td>
+                        <td v-for="(cell, j) in line" :key="j" :style="images.background.grass">
+                          <div v-if="cell.content === '1'" :style="images.walls[(i+j)%4]"></div>
+                          <div v-else-if="cell.content === 'P'" :style="images.path"></div>
+                          <div v-else-if="cell.content === 'E'"
+                               :style="images.doors.entrance"></div>
+                          <div v-else-if="cell.content === 'S'" :style="images.doors.exit"></div>
                         </td>
-                        <td :style="maze.background.r"></td>
+                        <td :style="images.background.r"></td>
                       </tr>
                       <tr>
-                        <td :style="maze.background.bl"></td>
-                        <td :style="maze.background.b" v-for="i in maze.size" :key="i"></td>
-                        <td :style="maze.background.br"></td>
+                        <td :style="images.background.bl"></td>
+                        <td :style="images.background.b" v-for="i in maze.size" :key="i"></td>
+                        <td :style="images.background.br"></td>
                       </tr>
                     </table>
                   </v-col>
@@ -141,74 +231,85 @@
 import 'vue-code-highlight/themes/prism-okaidia.css';
 import 'vue-code-highlight/themes/window.css';
 import { findPath } from '@/app';
-import CloneDeep from 'lodash/cloneDeep';
+import CloneDeep    from 'lodash/cloneDeep';
 
 export default {
-  data: () => ({
-    fileError: [],
-    loading: false,
+  data:    () => ({
+    fileError:  [],
+    loading:    false,
     parameters: {
-      cycles: 1000000,
-      tempInitial: 100,
-      tempVariation: 20,
+      cycles:           { min: 10, max: 1000000, step: 10, value: 10 },
+      pathWeightExit:   { min: 10, max: 80, step: 1, value: 10 },
+      pathWeightRepeat: { min: 10, max: 80, step: 1, value: 10 },
+      percentageGood:   { min: 10, max: 80, step: 1, value: 10 },
+      percentageWrong:  { min: 10, max: 80, step: 1, value: 10 },
+      tempInitial:      { min: 10, max: 80, step: 1, value: 10 },
+      tempVariation:    { min: 10, max: 80, step: 1, value: 10 },
     },
-    maze: {
+    images:     {
       background: {
         grass: { backgroundImage: `url(${require('@/assets/grass.png')})` },
-        tl: { backgroundImage: `url(${require('@/assets/tl.png')})` },
-        t: { backgroundImage: `url(${require('@/assets/t.png')})` },
-        tr: { backgroundImage: `url(${require('@/assets/tr.png')})` },
-        l: { backgroundImage: `url(${require('@/assets/l.png')})` },
-        r: { backgroundImage: `url(${require('@/assets/r.png')})` },
-        bl: { backgroundImage: `url(${require('@/assets/bl.png')})` },
-        b: { backgroundImage: `url(${require('@/assets/b.png')})` },
-        br: { backgroundImage: `url(${require('@/assets/br.png')})` },
+        tl:    { backgroundImage: `url(${require('@/assets/tl.png')})` },
+        t:     { backgroundImage: `url(${require('@/assets/t.png')})` },
+        tr:    { backgroundImage: `url(${require('@/assets/tr.png')})` },
+        l:     { backgroundImage: `url(${require('@/assets/l.png')})` },
+        r:     { backgroundImage: `url(${require('@/assets/r.png')})` },
+        bl:    { backgroundImage: `url(${require('@/assets/bl.png')})` },
+        b:     { backgroundImage: `url(${require('@/assets/b.png')})` },
+        br:    { backgroundImage: `url(${require('@/assets/br.png')})` },
       },
-      doors: {
+      doors:      {
         entrance: { backgroundImage: `url(${require('@/assets/entrance.png')})` },
-        exit: { backgroundImage: `url(${require('@/assets/exit.png')})` },
+        exit:     { backgroundImage: `url(${require('@/assets/exit.png')})` },
       },
-      position: {
-        entrance: [],
-        exit: [],
-      },
-      file: null,
-      parsedContent: null,
-      rawContent: null,
-      size: null,
-      walls: [
+      path:       { backgroundImage: `url(${require('@/assets/path.png')})` },
+      walls:      [
         { backgroundImage: `url(${require('@/assets/w1.png')})` },
         { backgroundImage: `url(${require('@/assets/w2.png')})` },
         { backgroundImage: `url(${require('@/assets/w3.png')})` },
         { backgroundImage: `url(${require('@/assets/w4.png')})` },
       ],
     },
-    output: '',
+    maze:       {
+      position:      {
+        entrance: [],
+        exit:     [],
+      },
+      file:          null,
+      parsedContent: null,
+      rawContent:    null,
+      size:          null,
+    },
+    output:     '',
   }),
   methods: {
+    inp(model) {
+      console.log(model);
+      model.value = 10;
+    },
     clearConsole() {
       this.output = '';
     },
     solveMaze() {
       const {
-        workingPath, output,
-      } = findPath(CloneDeep(this.maze.parsedContent), this.maze.position, this.parameters);
+              workingPath, output,
+            } = findPath(CloneDeep(this.maze.parsedContent), this.maze.position, this.parameters);
       this.output += output;
       console.log(workingPath);
     },
     importTxt() {
       if (!this.maze.file) {
         this.maze.rawContent = null;
-        this.fileError = ['Informe um arquivo!'];
+        this.fileError       = ['Informe um arquivo!'];
         return;
       }
       const reader = new FileReader();
 
       reader.readAsText(this.maze.file);
-      reader.onload = () => {
+      reader.onload  = () => {
         this.maze.rawContent = reader.result;
-        const rawLines = this.maze.rawContent.split(/\n|\r\n/);
-        this.maze.size = parseInt(rawLines.shift(), 10);
+        const rawLines       = this.maze.rawContent.split(/\n|\r\n/);
+        this.maze.size       = parseInt(rawLines.shift(), 10);
         if (this.maze.size <= 1) {
           this.fileError = ['Labirinto muito pequeno!'];
         } else if (this.maze.size > 18) {
@@ -223,11 +324,14 @@ export default {
             switch (cell) {
               case 'E':
                 this.maze.position.entrance = { line: i, col: j };
-                convertedLine[j] = { wasVisited: false, content: 'E' };
+                convertedLine[j]            = { wasVisited: false, content: 'E' };
                 break;
               case 'S':
                 this.maze.position.exit = { line: i, col: j };
-                convertedLine[j] = { wasVisited: false, content: 'S' };
+                convertedLine[j]        = { wasVisited: false, content: 'S' };
+                break;
+              case 'P':
+                convertedLine[j] = { wasVisited: false, content: 'P' };
                 break;
               case '0':
                 convertedLine[j] = { wasVisited: false, content: '0' };

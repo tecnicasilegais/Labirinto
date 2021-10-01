@@ -1,7 +1,7 @@
-import Vue from 'vue';
+import Vue              from 'vue';
 import VueCodeHighlight from 'vue-code-highlight';
-import App from './App.vue';
-import vuetify from './plugins/vuetify';
+import App              from './App.vue';
+import vuetify          from './plugins/vuetify';
 
 Vue.config.productionTip = false;
 Vue.use(VueCodeHighlight);
