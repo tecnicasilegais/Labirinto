@@ -39,12 +39,26 @@ function nOfMovementsToExit(currPos) {
   return Math.abs(currPos.line - _exit.line) + Math.abs(currPos.col - _exit.col);
 }
 
+/**
+ * Return a random integer between 0 and the quantity sent as argument
+ * @param qtd - current position
+ * @returns {number} - Random integer
+ */
+function getRandomInteger(qtd) {
+  return Math.random() * qtd | 0;
+}
+
 function buildNextPath(path, parameters) {
 
   let hit = false;
+  let firstWrong = 0; //indice do primeiro nodo incorreto no path
   const currPosition = { line: _entrance.line, col: _entrance.col };
   const positions = [];
-  for (const movement of path) {
+
+  for (let i = 0; i < path.length; i++) {
+
+    const movement = path[i];
+
     _maze[currPosition.line][currPosition.col].wasVisited = true;
     positions.push(_maze[currPosition.line][currPosition.col]);
 
@@ -66,48 +80,65 @@ function buildNextPath(path, parameters) {
     }
     if (outOfMaze(currPosition)) {
       hit = true;
+      if(firstWrong === '') firstWrong = i;
+      break;
     } else {
       if (hitsWall(_maze[currPosition.line][currPosition.col])) {
         hit = true;
+        if(firstWrong === '') firstWrong = i;
+        break;
       }
       if (alreadyVisited(_maze[currPosition.line][currPosition.col])) {
         hit = true;
+        if(firstWrong === '') firstWrong = i;
+        break;
       }
     }
   }
 
-  //TODO: essas 2 vars precisam vir do front
   const prctFixed = parameters.prctFixed; //porcentagem de vezes que ele resolve o primeiro errado
-  const prctGoodChoice = parameters.prctGoodChoice;
+  const prctGoodChoice = parameters.prctGoodChoice; //porcentagem de vezes que ele escolhe a primeira opção de caminho alteranativo 
 
-  //let firstWrong; //primeiro nodo incorreto no path
-
-  let fixOptions = [];//ao percorrer o path, posso pegar as possibilidades junto e as posições delas pra talvez modificar elas
-
-  //TODO: ao criar o _maze podemos adicionar um atributo que mostre as possibilidades de movimento do nodo
-
-  const options = 'CDBE';
+  const moves = ['C','D','B','E'];
   if (!hit) {
-    path += options[Math.random() | 0];
+    //Caso de ter o caminho completo sem batida
+    path += moves[getRandomNumber(4)];
   } else {
-    let percentage = Math.random();
-    if (prctFixed >= percentage) {
-      //Caso tenha que arrumar o primeiro errado
-      //tenta modificar para uma das possibilidades de movimento
-      //ou caso nao tenha possibilidades, pega aleatoriamente umas das outras 3 opções de movimento
+    //Caso de existir pelo menos uma batida no caminho
+    if (prctFixed <= Math.random()) {
+      //Caso tenha que arrumar o primeiro movimento errado
+      let possibilities = positions[firstWrong].possibilities //TODO: verificar como esta essas possibilidades
+      possibilities = possibilities.filter(move => move != path[firstWrong])
+      if(possibilities.length > 0) {
+        //modifica para uma das possibilidades de movimento
+        path[firstWrong] = possibilities[getRandomInteger(possibilities.length)];
+      } else {
+        //ou caso nao tenha possibilidades, pega aleatoriamente umas das outras 3 opções de movimento
+        path[firstWrong] = moves.filter(move => move != path[firstWrong])[getRandomInteger(3)]
+      }
     } else {
       //caso que pega uma posição aleatoria da sequencia e muda conforme a porcentagem de escolhas boas
-      let pos = Math.random() * fixOptions.size();
+      let pos = getRandomInteger(path.length);
       if (prctGoodChoice <= Math.random()) {
-        //caso que pega a posição escolhida e bota um movimento aleatoria diferente do atual
-        //let move = options[Math.random() * options, 10 | 0];
-        //MODIFICAR AQUI, TA ERRADO
-        path[pos] = options[Math.random() * options, 10 | 0];
+        //caso que modifica para uma possibilidade de movimento
+        possibilities = positions[pos].possibilities;
+        possibilities = possibilities.filter(move => move != path[pos]);
+        if(possibilities.length > 0) {
+          //se existir uma possibilidade de movimento
+          path[pos] = possibilities[getRandomInteger(possibilities.length)] 
+        } else {
+          //mesmo caso do else mais abaixo
+          path[pos] = moves.filter(move => move != path[pos])[getRandomInteger(3)]
+        }
       } else {
-        //caso que pega a posição escolhida e bota um movimento válido
+        //caso que pega a posição e adiciona aleatoriamente um movimento 
+        path[pos] = moves.filter(move => move != path[pos])[getRandomInteger(3)]
       }
     }
   }
+  
+  //Retorna o caminho atualizado
+  return path;
 }
 
 function calculateFitness(path) {
@@ -190,7 +221,7 @@ export function findPath(maze, { entrance, exit }, parameters) {
   }
 
   //TODO: ciclos e temperatura
-  //Conforme temperatura abaixa, muda menos os movimentos iniciais
+  //Conforme temperatura baixa, escolhe menos vezes o pior caminho 
 
   _output += '\n';
   return { workingPath, output: _output };
