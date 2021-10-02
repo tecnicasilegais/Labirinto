@@ -1,4 +1,4 @@
-import * as rn from 'random-number';
+import * as getRandomNumber from 'random-number';
 
 const characters = 'UDRL';
 let _maze;
@@ -50,10 +50,10 @@ function getRandomInteger(qtd) {
 
 function buildNextPath(path, parameters) {
 
-  let hit = false;
-  let firstWrong = 0; //indice do primeiro nodo incorreto no path
+  let hit            = false;
+  let firstWrong     = 0; //indice do primeiro nodo incorreto no path
   const currPosition = { line: _entrance.line, col: _entrance.col };
-  const positions = [];
+  const positions    = [];
 
   for (let i = 0; i < path.length; i++) {
 
@@ -80,63 +80,63 @@ function buildNextPath(path, parameters) {
     }
     if (outOfMaze(currPosition)) {
       hit = true;
-      if(firstWrong === '') firstWrong = i;
+      if (firstWrong === '') firstWrong = i;
       break;
     } else {
       if (hitsWall(_maze[currPosition.line][currPosition.col])) {
         hit = true;
-        if(firstWrong === '') firstWrong = i;
+        if (firstWrong === '') firstWrong = i;
         break;
       }
       if (alreadyVisited(_maze[currPosition.line][currPosition.col])) {
         hit = true;
-        if(firstWrong === '') firstWrong = i;
+        if (firstWrong === '') firstWrong = i;
         break;
       }
     }
   }
 
-  const prctFixed = parameters.prctFixed; //porcentagem de vezes que ele resolve o primeiro errado
-  const prctGoodChoice = parameters.prctGoodChoice; //porcentagem de vezes que ele escolhe a primeira opção de caminho alteranativo 
+  const prctFixed      = parameters.percentageWrong; //porcentagem de vezes que ele resolve o primeiro errado
+  const prctGoodChoice = parameters.percentageGood; //porcentagem de vezes que ele escolhe a primeira opção de caminho alteranativo
 
-  const moves = ['C','D','B','E'];
+  const moves = ['C', 'D', 'B', 'E'];
   if (!hit) {
     //Caso de ter o caminho completo sem batida
-    path += moves[getRandomNumber(4)];
+    path += moves[getRandomNumber({ max: 4 })];
   } else {
     //Caso de existir pelo menos uma batida no caminho
     if (prctFixed <= Math.random()) {
       //Caso tenha que arrumar o primeiro movimento errado
-      let possibilities = positions[firstWrong].possibilities //TODO: verificar como esta essas possibilidades
-      possibilities = possibilities.filter(move => move != path[firstWrong])
-      if(possibilities.length > 0) {
+      let possibilities = positions[firstWrong].possibilities; //TODO: verificar como esta essas possibilidades
+      possibilities     = possibilities.filter(move => move != path[firstWrong]);
+      if (possibilities.length > 0) {
         //modifica para uma das possibilidades de movimento
         path[firstWrong] = possibilities[getRandomInteger(possibilities.length)];
       } else {
         //ou caso nao tenha possibilidades, pega aleatoriamente umas das outras 3 opções de movimento
-        path[firstWrong] = moves.filter(move => move != path[firstWrong])[getRandomInteger(3)]
+        path[firstWrong] = moves.filter(move => move != path[firstWrong])[getRandomInteger(3)];
       }
     } else {
       //caso que pega uma posição aleatoria da sequencia e muda conforme a porcentagem de escolhas boas
       let pos = getRandomInteger(path.length);
       if (prctGoodChoice <= Math.random()) {
         //caso que modifica para uma possibilidade de movimento
-        possibilities = positions[pos].possibilities;
-        possibilities = possibilities.filter(move => move != path[pos]);
-        if(possibilities.length > 0) {
+        let possibilities = positions[pos].possibilities;
+        possibilities     = possibilities.filter(move => move != path[pos]);
+        if (possibilities.length > 0) {
           //se existir uma possibilidade de movimento
-          path[pos] = possibilities[getRandomInteger(possibilities.length)] 
+          path[pos] = possibilities[getRandomInteger(possibilities.length)];
         } else {
           //mesmo caso do else mais abaixo
-          path[pos] = moves.filter(move => move != path[pos])[getRandomInteger(3)]
+          path[pos] = moves.filter(move => move != path[pos])[getRandomInteger(3)];
         }
       } else {
-        //caso que pega a posição e adiciona aleatoriamente um movimento 
-        path[pos] = moves.filter(move => move != path[pos])[getRandomInteger(3)]
+        //caso que pega a posição e adiciona aleatoriamente um movimento
+        path[pos] = moves.filter(move => move != path[pos])[getRandomInteger(3)];
       }
     }
   }
-  
+
   //Retorna o caminho atualizado
   return path;
 }
@@ -192,11 +192,11 @@ function calculateFitness(path) {
  * @param parameters
  */
 export function findPath(maze, { entrance, exit }, parameters) {
-  _output = '';
-  _maze = maze;
+  _output   = '';
+  _maze     = maze;
   _entrance = entrance;
-  _exit = exit;
-  _limits = {
+  _exit     = exit;
+  _limits   = {
     top: 0, bottom: _maze.length - 1, right: _maze[0].length - 1, left: 0,
   };
 
@@ -206,13 +206,10 @@ export function findPath(maze, { entrance, exit }, parameters) {
   //let nextPath;
   const workingPath = calculateFitness(currentPath);
 
-  const randomNumber = rn();
-  _output += `${randomNumber}\n`;
-
 
   //Start the cycle until numInteractions is reached
   for (let i = 0; i <= parameters.cycles; i++) {
-    buildNextPath(maze, parameters);//Errado
+    buildNextPath(maze, parameters);//Errado(coloquei só para o linter achar que a funçao é usada)
     //get heuristic of currently path
     // if h(currently) == 0 -> end of algorithm
     //nextPath = buildNextPath(currentPath, parameters);
@@ -221,7 +218,7 @@ export function findPath(maze, { entrance, exit }, parameters) {
   }
 
   //TODO: ciclos e temperatura
-  //Conforme temperatura baixa, escolhe menos vezes o pior caminho 
+  //Conforme temperatura baixa, escolhe menos vezes o pior caminho
 
   _output += '\n';
   return { workingPath, output: _output };
@@ -233,7 +230,7 @@ export function findPath(maze, { entrance, exit }, parameters) {
  * @returns {string} - random string
  */
 function generateString(length) {
-  let result = '';
+  let result             = '';
   const charactersLength = characters.length;
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));

@@ -196,7 +196,7 @@
                         <td :style="images.background.t" v-for="i in maze.size" :key="i"></td>
                         <td :style="images.background.tr"></td>
                       </tr>
-                      <tr v-for="(line, i) in maze.parsedContent" :key="i">
+                      <tr v-for="(line, i) in maze.displayMaze" :key="i">
                         <td :style="images.background.l"></td>
                         <td v-for="(cell, j) in line" :key="j" :style="images.background.grass">
                           <div v-if="cell.content === '1'" :style="images.walls[(i+j)%4]"></div>
@@ -271,14 +271,15 @@ export default {
       ],
     },
     maze:       {
-      position:      {
+      position:     {
         entrance: [],
         exit:     [],
       },
-      file:          null,
-      parsedContent: null,
-      rawContent:    null,
-      size:          null,
+      file:         null,
+      displayMaze:  null,
+      rawContent:   null,
+      originalCopy: null,
+      size:         null,
     },
     output:     '',
   }),
@@ -291,9 +292,10 @@ export default {
       this.output = '';
     },
     solveMaze() {
+      this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
       const {
               workingPath, output,
-            } = findPath(CloneDeep(this.maze.parsedContent), this.maze.position, this.parameters);
+            }               = findPath(this.maze.displayMaze, this.maze.position, this.parameters);
       this.output += output;
       console.log(workingPath);
     },
@@ -316,37 +318,41 @@ export default {
           this.fileError = ['Labirinto muito grande!'];
         }
 
-        this.maze.parsedContent = [];
+        let splitLines = [];
+        for (const rawLine of rawLines) {
+          splitLines.push(rawLine.split(' '));
+        }
+
+        this.maze.displayMaze = [];
         for (let i = 0; i < this.maze.size; i++) {
-          const convertedLine = rawLines[i].split(' ');
           for (let j = 0; j < this.maze.size; j++) {
-            const cell = convertedLine[j];
-            switch (cell) {
-              case 'E':
-                this.maze.position.entrance = { line: i, col: j };
-                convertedLine[j]            = { wasVisited: false, content: 'E' };
-                break;
-              case 'S':
-                this.maze.position.exit = { line: i, col: j };
-                convertedLine[j]        = { wasVisited: false, content: 'S' };
-                break;
-              case 'P':
-                convertedLine[j] = { wasVisited: false, content: 'P' };
-                break;
-              case '0':
-                convertedLine[j] = { wasVisited: false, content: '0' };
-                break;
-              case '1':
-                convertedLine[j] = { wasVisited: false, content: '1' };
-                break;
-              default:
-                this.fileError = ['Malformed maze'];
-                return;
+            const cell       = splitLines[i][j];
+            splitLines[i][j] = { wasVisited: false, content: cell, possiblePaths: [] };
+            if (splitLines[i][j].content !== '1') {//Se célula não é parede,
+              if (i > 0 && splitLines[i - 1][j] !== '1') {//Se não é a primeira linha e a célula acima não é parede
+                splitLines[i][j].possiblePaths.push('U');
+              }
+              if (i < this.maze.size - 1 && splitLines[i + 1][j] !== '1') {//Se não é a última linha e a linha de baixo não é parede
+                splitLines[i][j].possiblePaths.push('D');
+              }
+              if (j > 0 && splitLines[i][j - 1] !== '1') {//Se não é a primeira coluna e a célula da esquerda não é parede
+                splitLines[i][j].possiblePaths.push('L');
+              }
+              if (j < this.maze.size - 1 && splitLines[i][j + 1] !== '1') {//Se não é a última coluna e a célula da direita não é parede
+                splitLines[i][j].possiblePaths.push('R');
+              }
+            }
+            if (splitLines[i][j].content === 'E') {
+              this.maze.position.entrance = { line: i, col: j };
+            } else if (splitLines[i][j].content === 'S') {
+              this.maze.position.exit = { line: i, col: j };
             }
           }
-          this.maze.parsedContent.push(convertedLine);
         }
-        if (this.maze.parsedContent.length > 18) {
+
+        this.maze.displayMaze  = splitLines;
+        this.maze.originalCopy = CloneDeep(splitLines);
+        if (this.maze.displayMaze.length > 18) {
           this.fileError = ['Labirinto muito grande!'];
         }
       };
