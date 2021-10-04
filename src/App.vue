@@ -55,7 +55,7 @@
                           <template v-slot:prepend>
                             <v-text-field v-model="parameters.tempInitial.value" hide-details dense
                                           outlined single-line type="number" style="width: 85px"
-                                          suffix="°C">
+                                          suffix="%">
                             </v-text-field>
                           </template>
                         </v-slider>
@@ -73,7 +73,7 @@
                             <v-text-field v-model="parameters.tempVariation.value" hide-details
                                           dense
                                           outlined single-line type="number" style="width: 85px"
-                                          suffix="°C">
+                                          suffix="%">
 
                             </v-text-field>
                           </template>
@@ -122,13 +122,15 @@
                       <v-col class="pr-5">
                         <label for="path_weight_exit" class="pl-0">Peso de saída do
                           labirinto</label>
-                        <v-slider v-model="parameters.pathWeightExit.value" dense thumb-label
+                        <v-slider v-model="parameters.fitnessWeight.pathExit.value" dense
+                                  thumb-label
                                   hide-details id="path_weight_exit"
-                                  :max="parameters.pathWeightExit.max"
-                                  :min="parameters.pathWeightExit.min"
-                                  :step="parameters.pathWeightExit.step">
+                                  :max="parameters.fitnessWeight.pathExit.max"
+                                  :min="parameters.fitnessWeight.pathExit.min"
+                                  :step="parameters.fitnessWeight.pathExit.step">
                           <template v-slot:prepend>
-                            <v-text-field v-model="parameters.pathWeightExit.value" hide-details
+                            <v-text-field v-model="parameters.fitnessWeight.pathExit.value"
+                                          hide-details
                                           dense
                                           outlined single-line type="number" style="width: 85px">
                             </v-text-field>
@@ -138,13 +140,15 @@
                       <v-col>
                         <label for="path_weight_repeat" class="pl-0">Peso de caminho
                           repetido</label>
-                        <v-slider v-model="parameters.pathWeightRepeat.value" dense thumb-label
+                        <v-slider v-model="parameters.fitnessWeight.pathRepeat.value" dense
+                                  thumb-label
                                   hide-details id="path_weight_repeat"
-                                  :max="parameters.pathWeightRepeat.max"
-                                  :min="parameters.pathWeightRepeat.min"
-                                  :step="parameters.pathWeightRepeat.step">
+                                  :max="parameters.fitnessWeight.pathRepeat.max"
+                                  :min="parameters.fitnessWeight.pathRepeat.min"
+                                  :step="parameters.fitnessWeight.pathRepeat.step">
                           <template v-slot:prepend>
-                            <v-text-field v-model="parameters.pathWeightRepeat.value" hide-details
+                            <v-text-field v-model="parameters.fitnessWeight.pathRepeat.value"
+                                          hide-details
                                           dense outlined single-line type="number"
                                           style="width: 85px">
 
@@ -200,7 +204,7 @@
                         <td :style="images.background.l"></td>
                         <td v-for="(cell, j) in line" :key="j" :style="images.background.grass">
                           <div v-if="cell.content === '1'" :style="images.walls[(i+j)%4]"></div>
-                          <div v-else-if="cell.content === 'P'" :style="images.path"></div>
+                          <div v-else-if="cell.wasVisited" :style="images.path"></div>
                           <div v-else-if="cell.content === 'E'"
                                :style="images.doors.entrance"></div>
                           <div v-else-if="cell.content === 'S'" :style="images.doors.exit"></div>
@@ -238,13 +242,15 @@ export default {
     fileError:  [],
     loading:    false,
     parameters: {
-      cycles:           { min: 10, max: 1000000, step: 10, value: 10 },
-      pathWeightExit:   { min: 10, max: 80, step: 1, value: 10 },
-      pathWeightRepeat: { min: 10, max: 80, step: 1, value: 10 },
-      percentageGood:   { min: 10, max: 80, step: 1, value: 10 },
-      percentageWrong:  { min: 10, max: 80, step: 1, value: 10 },
-      tempInitial:      { min: 10, max: 80, step: 1, value: 10 },
-      tempVariation:    { min: 10, max: 80, step: 1, value: 10 },
+      cycles:          { min: 10, max: 1000, step: 10, value: 10 },
+      percentageGood:  { min: 10, max: 80, step: 1, value: 10 },
+      percentageWrong: { min: 10, max: 80, step: 1, value: 10 },
+      tempInitial:     { min: 10, max: 80, step: 1, value: 10 },
+      tempVariation:   { min: 10, max: 80, step: 1, value: 10 },
+      fitnessWeight:   {
+        pathExit:   { min: 1, max: 10, step: 1, value: 1 },
+        pathRepeat: { min: 1, max: 10, step: 1, value: 1 },
+      },
     },
     images:     {
       background: {
@@ -292,11 +298,15 @@ export default {
       this.output = '';
     },
     solveMaze() {
+      let normalizedParameters                 = CloneDeep(this.parameters);
+      normalizedParameters.cycles.value *= normalizedParameters.cycles.max;
+      normalizedParameters.percentageGood.value /= 100;
+      normalizedParameters.percentageWrong.value /= 100;
+      normalizedParameters.tempInitial.value *= 10000;
+      normalizedParameters.tempVariation.value = 1 - (normalizedParameters.tempVariation.value / 1000);
+
       this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
-      const {
-              workingPath, output,
-            }               = findPath(this.maze.displayMaze, this.maze.position, this.parameters);
-      this.output += output;
+      const workingPath     = findPath(this.maze.displayMaze, this.maze.position, normalizedParameters, this.output);
       console.log(workingPath);
     },
     importTxt() {
@@ -314,8 +324,10 @@ export default {
         this.maze.size       = parseInt(rawLines.shift(), 10);
         if (this.maze.size <= 1) {
           this.fileError = ['Labirinto muito pequeno!'];
+          return;
         } else if (this.maze.size > 18) {
           this.fileError = ['Labirinto muito grande!'];
+          return;
         }
 
         let splitLines = [];
@@ -328,7 +340,21 @@ export default {
           for (let j = 0; j < this.maze.size; j++) {
             const cell       = splitLines[i][j];
             splitLines[i][j] = { wasVisited: false, content: cell, possiblePaths: [] };
-            if (splitLines[i][j].content !== '1') {//Se célula não é parede,
+            switch (splitLines[i][j].content) {
+              case 'E': {
+                this.maze.position.entrance = { line: i, col: j };
+                break;
+              }
+              case 'S': {
+                this.maze.position.exit = { line: i, col: j };
+                break;
+              }
+              case 'P': {
+                this.fileError = ['Labirinto já caminhado, remover os \'P\''];
+                return;
+              }
+            }
+            if (splitLines[i][j].content !== '1') {//Se célula não é parede (engloba entradas e saídas)
               if (i > 0 && splitLines[i - 1][j] !== '1') {//Se não é a primeira linha e a célula acima não é parede
                 splitLines[i][j].possiblePaths.push('U');
               }
@@ -341,11 +367,6 @@ export default {
               if (j < this.maze.size - 1 && splitLines[i][j + 1] !== '1') {//Se não é a última coluna e a célula da direita não é parede
                 splitLines[i][j].possiblePaths.push('R');
               }
-            }
-            if (splitLines[i][j].content === 'E') {
-              this.maze.position.entrance = { line: i, col: j };
-            } else if (splitLines[i][j].content === 'S') {
-              this.maze.position.exit = { line: i, col: j };
             }
           }
         }

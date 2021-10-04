@@ -1,4 +1,5 @@
 import * as getRandomNumber from 'random-number';
+import CloneDeep            from 'lodash/cloneDeep';
 
 const characters = 'UDRL';
 let _maze;
@@ -45,23 +46,20 @@ function nOfMovementsToExit(currPos) {
  * @returns {number} - Random integer
  */
 function getRandomInteger(qtd) {
-  return Math.random() * qtd | 0;
+  return Math.floor(Math.random() * qtd);
 }
 
 function buildNextPath(path, parameters) {
-
-  let hit            = false;
-  let firstWrong     = 0; //indice do primeiro nodo incorreto no path
-  const currPosition = { line: _entrance.line, col: _entrance.col };
-  const positions    = [];
+  let hit               = false;
+  let firstWrong        = null; //indice do primeiro nodo incorreto no path
+  const currPosition    = { line: _entrance.line, col: _entrance.col };
+  const walkedPositions = [];
+  let cMaze             = CloneDeep(_maze);
 
   for (let i = 0; i < path.length; i++) {
+    walkedPositions.push(cMaze[currPosition.line][currPosition.col]);
 
     const movement = path[i];
-
-    _maze[currPosition.line][currPosition.col].wasVisited = true;
-    positions.push(_maze[currPosition.line][currPosition.col]);
-
     switch (movement) {
       case 'U':
         currPosition.line--;
@@ -79,60 +77,67 @@ function buildNextPath(path, parameters) {
         throw new Error('Invalid movement');
     }
     if (outOfMaze(currPosition)) {
-      hit = true;
-      if (firstWrong === '') firstWrong = i;
+      if (!hit) {
+        hit        = true;
+        firstWrong = i;
+      }
       break;
     } else {
-      if (hitsWall(_maze[currPosition.line][currPosition.col])) {
-        hit = true;
-        if (firstWrong === '') firstWrong = i;
-        break;
+      if (hitsWall(cMaze[currPosition.line][currPosition.col])) {
+        if (!hit) {
+          hit        = true;
+          firstWrong = i;
+        }
       }
-      if (alreadyVisited(_maze[currPosition.line][currPosition.col])) {
-        hit = true;
-        if (firstWrong === '') firstWrong = i;
-        break;
+      if (alreadyVisited(cMaze[currPosition.line][currPosition.col])) {
+        if (!hit) {
+          hit        = true;
+          firstWrong = i;
+        }
       }
+      cMaze[currPosition.line][currPosition.col].wasVisited = true;
     }
   }
 
-  const prctFixed      = parameters.percentageWrong; //porcentagem de vezes que ele resolve o primeiro errado
-  const prctGoodChoice = parameters.percentageGood; //porcentagem de vezes que ele escolhe a primeira opção de caminho alteranativo
+  const prctFixed      = parameters.percentageWrong.value; //porcentagem de vezes que ele resolve o primeiro errado
+  const prctGoodChoice = parameters.percentageGood.value; //porcentagem de vezes que ele escolhe a primeira opção de caminho alteranativo
 
-  const moves = ['C', 'D', 'B', 'E'];
+  const moves = ['U', 'R', 'D', 'L'];
   if (!hit) {
     //Caso de ter o caminho completo sem batida
-    path += moves[getRandomNumber({ max: 4 })];
+    path.push(moves[getRandomInteger(3)]);
   } else {
     //Caso de existir pelo menos uma batida no caminho
-    if (prctFixed <= Math.random()) {
+    let rnd = getRandomNumber();
+    if (prctFixed <= rnd) {
       //Caso tenha que arrumar o primeiro movimento errado
-      let possibilities = positions[firstWrong].possibilities; //TODO: verificar como esta essas possibilidades
-      possibilities     = possibilities.filter(move => move != path[firstWrong]);
+      let possibilities = walkedPositions[firstWrong].possiblePaths;
+      possibilities     = possibilities.filter(move => move !== path[firstWrong]);
       if (possibilities.length > 0) {
         //modifica para uma das possibilidades de movimento
         path[firstWrong] = possibilities[getRandomInteger(possibilities.length)];
       } else {
         //ou caso nao tenha possibilidades, pega aleatoriamente umas das outras 3 opções de movimento
-        path[firstWrong] = moves.filter(move => move != path[firstWrong])[getRandomInteger(3)];
+        path[firstWrong] = moves.filter(move => move !== path[firstWrong])[getRandomInteger(3)];
       }
     } else {
       //caso que pega uma posição aleatoria da sequencia e muda conforme a porcentagem de escolhas boas
-      let pos = getRandomInteger(path.length);
-      if (prctGoodChoice <= Math.random()) {
+      let pos  = getRandomInteger(path.length);
+      let rnd2 = getRandomNumber();
+      if (pos < walkedPositions.length && prctGoodChoice <= rnd2) {
         //caso que modifica para uma possibilidade de movimento
-        let possibilities = positions[pos].possibilities;
-        possibilities     = possibilities.filter(move => move != path[pos]);
+        let possibilities = walkedPositions[pos].possiblePaths;
+        possibilities     = possibilities.filter(move => move !== path[pos]);
         if (possibilities.length > 0) {
           //se existir uma possibilidade de movimento
           path[pos] = possibilities[getRandomInteger(possibilities.length)];
         } else {
           //mesmo caso do else mais abaixo
-          path[pos] = moves.filter(move => move != path[pos])[getRandomInteger(3)];
+          path[pos] = moves.filter(move => move !== path[pos])[getRandomInteger(3)];
         }
       } else {
         //caso que pega a posição e adiciona aleatoriamente um movimento
-        path[pos] = moves.filter(move => move != path[pos])[getRandomInteger(3)];
+        path[pos] = moves.filter(move => move !== path[pos])[getRandomInteger(3)];
       }
     }
   }
@@ -141,15 +146,15 @@ function buildNextPath(path, parameters) {
   return path;
 }
 
-function calculateFitness(path) {
+function calculateFitness(path, weights) {
   let fitness = 0;
+  let cMaze   = CloneDeep(_maze);
 
   const currPosition = { line: _entrance.line, col: _entrance.col };
 
   // Para cada movimento, verificar se está mais perto da saída, atravessa paredes ou sai do mapa,
   // verificar distancia ao final e somar quantidade de movimentos restantes
   for (const movement of path) {
-    _maze[currPosition.line][currPosition.col].wasVisited = true;
     switch (movement) {
       case 'U':
         currPosition.line--;
@@ -167,20 +172,21 @@ function calculateFitness(path) {
         throw new Error('Invalid movement');
     }
     if (outOfMaze(currPosition)) {
-      fitness++;
+      fitness += weights.pathExit.value;
     } else {
-      if (hitsWall(_maze[currPosition.line][currPosition.col])) {
+      if (hitsWall(cMaze[currPosition.line][currPosition.col])) {
         fitness++;
       }
-      if (alreadyVisited(_maze[currPosition.line][currPosition.col])) {
-        fitness++;
+      if (alreadyVisited(cMaze[currPosition.line][currPosition.col])) {
+        fitness += weights.pathRepeat.value;
       }
+      cMaze[currPosition.line][currPosition.col].wasVisited = true;
     }
   }
 
-  const movToExit = nOfMovementsToExit(currPosition);//TODO: Talvez problematico?
+  const movToExit = nOfMovementsToExit(currPosition);
   fitness += movToExit;
-  _output += `indivíduo '${path}', aptidão '${fitness}', distânciaSaída '${movToExit}'\n`;
+  //_output += `indivíduo '${path}', aptidão '${fitness}', distânciaSaída '${movToExit}'\n`;
   return fitness;
 }
 
@@ -190,9 +196,10 @@ function calculateFitness(path) {
  * @param entrance
  * @param exit
  * @param parameters
+ * @param output
  */
-export function findPath(maze, { entrance, exit }, parameters) {
-  _output   = '';
+export function findPath(maze, { entrance, exit }, parameters, output) {
+  _output   = output;
   _maze     = maze;
   _entrance = entrance;
   _exit     = exit;
@@ -200,28 +207,52 @@ export function findPath(maze, { entrance, exit }, parameters) {
     top: 0, bottom: _maze.length - 1, right: _maze[0].length - 1, left: 0,
   };
 
-  _output += `ciclos: ${parameters.cycles}, tempInicial: ${parameters.tempInitial}, variaçãoTemp: ${parameters.tempVariation}\n`;
+  _output += `ciclos: ${parameters.cycles.value}, tempInicial: ${parameters.tempInitial.value}, `;
+  _output += `variaçãoTemp: ${parameters.tempVariation.value}, chanceRuim: ${parameters.percentageWrong.value}, `;
+  _output += `chanceBom: ${parameters.percentageGood.value}, pesoSaída: ${parameters.fitnessWeight.pathExit.value}, `;
+  _output += `pesoRepetição: ${parameters.fitnessWeight.pathRepeat.value}\n`;
 
-  const currentPath = generateString(1);
-  //let nextPath;
-  const workingPath = calculateFitness(currentPath);
+  let temperature   = parameters.tempInitial.value;
+  let tempVariation = parameters.tempVariation.value;
 
+  let currentPath    = generateString(1);
+  let currentFitness = calculateFitness(currentPath, parameters.fitnessWeight);
+  let nextPath;
+  let nextFitness;
 
+  _output += 'Simulated Annealing iniciado\n';
   //Start the cycle until numInteractions is reached
-  for (let i = 0; i <= parameters.cycles; i++) {
-    buildNextPath(maze, parameters);//Errado(coloquei só para o linter achar que a funçao é usada)
-    //get heuristic of currently path
-    // if h(currently) == 0 -> end of algorithm
-    //nextPath = buildNextPath(currentPath, parameters);
+  for (let i = 0; i <= parameters.cycles.value; i++) {
+    _output += `Ciclo ${i}, \t Temperatura ${temperature}\n`;
+    _output += `Solução atual: ${currentPath}\n`;
 
+    if (currentFitness === 0) {
+      break;
+    }
+    nextPath    = buildNextPath([...currentPath], parameters);
+    nextFitness = calculateFitness(nextPath, parameters.fitnessWeight);
+    _output += `Solução vizinha: ${nextPath}\n`;
 
+    let energy = nextFitness - currentFitness;
+    if (energy <= 0) {
+      currentPath    = nextPath;
+      currentFitness = nextFitness;
+    } else {
+      let probability = Math.exp(-energy / temperature);
+      let random      = getRandomNumber();
+      if (random < probability) {
+        _output += 'Aceitou solução pior\n';
+        currentPath    = nextPath;
+        currentFitness = nextFitness;
+      }
+    }
+    temperature *= tempVariation;
   }
 
-  //TODO: ciclos e temperatura
   //Conforme temperatura baixa, escolhe menos vezes o pior caminho
 
   _output += '\n';
-  return { workingPath, output: _output };
+  return { nextPath, output: _output };
 }
 
 /**
