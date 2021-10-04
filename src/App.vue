@@ -245,10 +245,10 @@ export default {
       cycles:          { min: 10, max: 1000, step: 10, value: 10 },
       percentageGood:  { min: 10, max: 80, step: 1, value: 10 },
       percentageWrong: { min: 10, max: 80, step: 1, value: 10 },
-      tempInitial:     { min: 10, max: 80, step: 1, value: 10 },
+      tempInitial:     { min: 10, max: 80, step: 1, value: 80 },
       tempVariation:   { min: 10, max: 80, step: 1, value: 10 },
       fitnessWeight:   {
-        pathExit:   { min: 1, max: 10, step: 1, value: 1 },
+        pathExit:   { min: 1, max: 10, step: 1, value: 2 },
         pathRepeat: { min: 1, max: 10, step: 1, value: 1 },
       },
     },
@@ -278,8 +278,8 @@ export default {
     },
     maze:       {
       position:     {
-        entrance: [],
-        exit:     [],
+        entrance: {},
+        exit:     {},
       },
       file:         null,
       displayMaze:  null,
@@ -294,6 +294,33 @@ export default {
       console.log(model);
       model.value = 10;
     },
+    walkPath(path) {
+      const currPosition = CloneDeep(this.maze.position.entrance);
+
+      for (const movement of path) {
+        switch (movement) {
+          case 'U':
+            currPosition.line--;
+            break;
+          case 'D':
+            currPosition.line++;
+            break;
+          case 'R':
+            currPosition.col++;
+            break;
+          case 'L':
+            currPosition.col--;
+            break;
+          default:
+            throw new Error('Invalid movement');
+        }
+        if (currPosition.line >= 0 && currPosition.col >= 0
+            && currPosition.line <= this.maze.size - 1 && currPosition.col <= this.maze.size - 1
+            && this.maze.displayMaze[currPosition.line][currPosition.col].content === '0') {
+          this.maze.displayMaze[currPosition.line][currPosition.col].wasVisited = true;
+        }
+      }
+    },
     clearConsole() {
       this.output = '';
     },
@@ -306,7 +333,11 @@ export default {
       normalizedParameters.tempVariation.value = 1 - (normalizedParameters.tempVariation.value / 1000);
 
       this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
-      const workingPath     = findPath(this.maze.displayMaze, this.maze.position, normalizedParameters, this.output);
+      const {
+              workingPath, output,
+            }               = findPath(this.maze.displayMaze, this.maze.position, normalizedParameters, this.output);
+      this.output           = output;
+      this.walkPath(workingPath);
       console.log(workingPath);
     },
     importTxt() {

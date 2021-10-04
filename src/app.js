@@ -251,8 +251,9 @@ export function findPath(maze, { entrance, exit }, parameters, output) {
 
   //Conforme temperatura baixa, escolhe menos vezes o pior caminho
 
+  _output += `Final path: ${nextPath}\n`;
   _output += '\n';
-  return { nextPath, output: _output };
+  return { workingPath: nextPath, output: _output };
 }
 
 /**
