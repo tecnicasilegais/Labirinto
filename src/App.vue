@@ -10,7 +10,13 @@
                   <v-overlay :value="loading" absolute>
                     <v-progress-circular indeterminate size="64"></v-progress-circular>
                   </v-overlay>
-                  <v-card-title>Parâmetros</v-card-title>
+                  <v-card-title>Parâmetros
+                    <v-spacer></v-spacer>
+                    <v-btn elevation="0" small color="primary"
+                           href="maze.txt" download>Labirinto Exemplo
+                      <v-icon right dark>mdi-cloud-download</v-icon>
+                    </v-btn>
+                  </v-card-title>
                   <v-divider></v-divider>
                   <v-card-text>
                     <v-row dense>
@@ -22,7 +28,7 @@
                                       id="file_maze"></v-file-input>
                       </v-col>
                       <v-col>
-                        <label for="cycles" class="pl-0">Ciclos (em milhares)</label>
+                        <label for="cycles" class="pl-0">Ciclos</label>
                         <v-slider v-model="parameters.cycles.value" dense thumb-label hide-details
                                   id="cycles"
                                   :max="parameters.cycles.max"
@@ -114,38 +120,52 @@
                     </v-row>
                     <v-row dense>
                       <v-col class="pr-5">
-                        <label for="path_weight_exit" class="pl-0">Peso de saída do
-                          labirinto</label>
-                        <v-slider v-model="parameters.fitnessWeight.pathExit.value" dense
+                        <label for="path_weight_repeat" class="pl-0">Peso de repetir o
+                          caminho</label>
+                        <v-slider v-model="parameters.weight.pathRepeat.value" dense
                                   thumb-label
-                                  hide-details id="path_weight_exit"
-                                  :max="parameters.fitnessWeight.pathExit.max"
-                                  :min="parameters.fitnessWeight.pathExit.min"
-                                  :step="parameters.fitnessWeight.pathExit.step">
+                                  hide-details id="path_weight_repeat"
+                                  :max="parameters.weight.pathRepeat.max"
+                                  :min="parameters.weight.pathRepeat.min"
+                                  :step="parameters.weight.pathRepeat.step">
                           <template v-slot:prepend>
-                            <v-text-field v-model="parameters.fitnessWeight.pathExit.value"
-                                          hide-details
-                                          dense
-                                          outlined single-line type="number" style="width: 85px">
+                            <v-text-field v-model="parameters.weight.pathRepeat.value"
+                                          hide-details dense outlined single-line type="number"
+                                          style="width: 85px">
+
+                            </v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                      <v-col class="pr-5">
+                        <label for="path_weight_wall" class="pl-0">Peso de bater na parede</label>
+                        <v-slider v-model="parameters.weight.pathWall.value" dense
+                                  thumb-label
+                                  hide-details id="path_weight_repeat"
+                                  :max="parameters.weight.pathWall.max"
+                                  :min="parameters.weight.pathWall.min"
+                                  :step="parameters.weight.pathWall.step">
+                          <template v-slot:prepend>
+                            <v-text-field v-model="parameters.weight.pathWall.value"
+                                          hide-details dense outlined single-line type="number"
+                                          style="width: 85px">
+
                             </v-text-field>
                           </template>
                         </v-slider>
                       </v-col>
                       <v-col>
-                        <label for="path_weight_repeat" class="pl-0">Peso de caminho
-                          repetido</label>
-                        <v-slider v-model="parameters.fitnessWeight.pathRepeat.value" dense
+                        <label for="path_weight_exit" class="pl-0">Peso de sair do labirinto</label>
+                        <v-slider v-model="parameters.weight.pathExit.value" dense
                                   thumb-label
-                                  hide-details id="path_weight_repeat"
-                                  :max="parameters.fitnessWeight.pathRepeat.max"
-                                  :min="parameters.fitnessWeight.pathRepeat.min"
-                                  :step="parameters.fitnessWeight.pathRepeat.step">
+                                  hide-details id="path_weight_exit"
+                                  :max="parameters.weight.pathExit.max"
+                                  :min="parameters.weight.pathExit.min"
+                                  :step="parameters.weight.pathExit.step">
                           <template v-slot:prepend>
-                            <v-text-field v-model="parameters.fitnessWeight.pathRepeat.value"
-                                          hide-details
-                                          dense outlined single-line type="number"
+                            <v-text-field v-model="parameters.weight.pathExit.value"
+                                          hide-details dense outlined single-line type="number"
                                           style="width: 85px">
-
                             </v-text-field>
                           </template>
                         </v-slider>
@@ -242,14 +262,15 @@ export default {
     fileError:  [],
     loading:    false,
     parameters: {
-      cycles:          { min: 5, max: 100, step: 5, value: 5 },
-      percentageGood:  { min: 10, max: 80, step: 10, value: 10 },
-      percentageWrong: { min: 10, max: 80, step: 10, value: 10 },
+      cycles:          { min: 1000, max: 10000, step: 1000, value: 5000 },
+      percentageGood:  { min: 10, max: 80, step: 5, value: 10 },
+      percentageWrong: { min: 10, max: 80, step: 5, value: 15 },
       tempInitial:     { min: 10, max: 80, step: 10, value: 80 },
       tempVariation:   { min: 10, max: 80, step: 10, value: 10 },
-      fitnessWeight:   {
-        pathExit:   { min: 1, max: 10, step: 1, value: 2 },
+      weight:          {
+        pathExit:   { min: 1, max: 10, step: 1, value: 3 },
         pathRepeat: { min: 1, max: 10, step: 1, value: 1 },
+        pathWall:   { min: 1, max: 10, step: 1, value: 1 },
       },
     },
     images:     {
@@ -317,22 +338,27 @@ export default {
               && this.maze.displayMaze[currPosition.line][currPosition.col].content === '0') {
             this.maze.displayMaze[currPosition.line][currPosition.col].wasVisited = true;
           }
-        }, i * 250);
+        }, i * 150);
       }
     },
     clearConsole() {
       this.outputList = [];
     },
     solveMaze() {
-      let normalizedParameters                 = CloneDeep(this.parameters);
-      normalizedParameters.cycles.value *= 1000;
-      normalizedParameters.percentageGood.value /= 100;
-      normalizedParameters.percentageWrong.value /= 100;
-      normalizedParameters.tempInitial.value *= 1000000000;
-      normalizedParameters.tempVariation.value = 1 - (normalizedParameters.tempVariation.value / 10000);
-
       this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
 
+      let normalizedParameters = {
+        cycles:          this.parameters.cycles.value,
+        percentageGood:  this.parameters.percentageGood.value / 100,
+        percentageWrong: this.parameters.percentageWrong.value / 100,
+        tempInitial:     this.parameters.tempInitial.value * 1000000000,
+        tempVariation:   1 - (this.parameters.tempVariation.value / 10000),
+        weight:          {
+          pathExit:   this.parameters.weight.pathExit.value,
+          pathRepeat: this.parameters.weight.pathRepeat.value,
+          pathWall:   this.parameters.weight.pathWall.value,
+        },
+      };
 
       const worker     = new Worker();
       worker.onmessage = (msg) => {

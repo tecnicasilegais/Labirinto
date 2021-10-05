@@ -97,8 +97,8 @@ function buildNextPath(path, parameters) {
     }
   }
 
-  const prctFixed      = parameters.percentageWrong.value; //porcentagem de vezes que ele resolve o primeiro errado
-  const prctGoodChoice = parameters.percentageGood.value; //porcentagem de vezes que ele escolhe a primeira opção de caminho alteranativo
+  const prctFixed      = parameters.percentageWrong; //porcentagem de vezes que ele resolve o primeiro errado
+  const prctGoodChoice = parameters.percentageGood; //porcentagem de vezes que ele escolhe a primeira opção de caminho alteranativo
 
   const moves = ['U', 'R', 'D', 'L'];
   if (!hit) {
@@ -170,13 +170,13 @@ function calculateFitness(path, weights) {
         throw new Error('Invalid movement');
     }
     if (outOfMaze(currPosition)) {
-      fitness += weights.pathExit.value;
+      fitness += weights.pathExit;
     } else {
       if (hitsWall(_maze[currPosition.line][currPosition.col])) {
-        fitness++;
+        fitness += weights.pathWall;
       }
       if (alreadyVisited(visitedPositions, currPosition)) {
-        fitness += weights.pathRepeat.value;
+        fitness += weights.pathRepeat;
       }
       (visitedPositions[currPosition.line] ??= {})[currPosition.col] ??= true;
     }
@@ -232,31 +232,30 @@ export function findPath(maze, positions, parameters) {
 
   sendStatus('started');
 
-  writeOutput(`ciclos: ${parameters.cycles.value}, tempInicial: ${parameters.tempInitial.value}, `);
-  writeOutput(`variaçãoTemp: ${parameters.tempVariation.value}, chanceRuim: ${parameters.percentageWrong.value}, `);
-  writeOutput(`chanceBom: ${parameters.percentageGood.value}, pesoSaída: ${parameters.fitnessWeight.pathExit.value}, `);
-  writeOutput(`pesoRepetição: ${parameters.fitnessWeight.pathRepeat.value}\n`);
-
-  let temperature   = parameters.tempInitial.value;
-  let tempVariation = parameters.tempVariation.value;
+  let { cycles, percentageGood, percentageWrong, tempInitial, tempVariation, weight } = parameters;
+  //let temperature                                                                     = parameters.tempInitial;
+  //let tempVariation                                                                   = parameters.tempVariation;
 
   let currentPath    = generateString(1);
-  let currentFitness = calculateFitness(currentPath, parameters.fitnessWeight);
+  let currentFitness = calculateFitness(currentPath, weight);
   let nextPath;
   let nextFitness;
 
+  writeOutput(`ciclos: ${cycles}, tempInicial: ${tempInitial}, \`variaçãoTemp: ${tempVariation}\n`);
+  writeOutput(`chanceBom: ${percentageGood}, chanceRuim: ${percentageWrong}\n`);
+  writeOutput(`pesoRepetição: ${weight.pathRepeat}, pesoBatida:${weight.pathWall}, pesoSaída: ${weight.pathExit}\n`);
   writeOutput('Simulated Annealing iniciado\n');
   //Start the cycle until numInteractions is reached
   let cycleOutput;
-  for (let i = 0; i <= parameters.cycles.value; i++) {
-    cycleOutput = `Ciclo ${i}, \t Temperatura ${temperature}\n`;
+  for (let i = 0; i <= cycles; i++) {
+    cycleOutput = `Ciclo ${i}, \t Temperatura ${tempInitial}\n`;
     cycleOutput += `Solução atual: ${currentPath}\n`;
 
     if (currentFitness === 0) {
       break;
     }
     nextPath    = buildNextPath([...currentPath], parameters);
-    nextFitness = calculateFitness(nextPath, parameters.fitnessWeight);
+    nextFitness = calculateFitness(nextPath, weight);
     cycleOutput += `Solução vizinha: ${nextPath}\n`;
 
     let energy = nextFitness - currentFitness;
@@ -264,7 +263,7 @@ export function findPath(maze, positions, parameters) {
       currentPath    = nextPath;
       currentFitness = nextFitness;
     } else {
-      let probability = Math.exp(-energy / temperature);
+      let probability = Math.exp(-energy / tempInitial);
       let random      = getRandomNumber();
       if (random < probability) {
         cycleOutput += 'Aceitou solução pior\n';
@@ -272,7 +271,7 @@ export function findPath(maze, positions, parameters) {
         currentFitness = nextFitness;
       }
     }
-    temperature *= tempVariation;
+    tempInitial *= tempVariation;
     writeOutput(cycleOutput);
   }
   //Conforme temperatura baixa, escolhe menos vezes o pior caminho
