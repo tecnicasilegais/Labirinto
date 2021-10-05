@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "comlink": "^4.3.1",
     "core-js": "^3.6.5",
     "lodash": "^4.17.21",
     "v8": "^0.1.0",
@@ -30,7 +31,8 @@
     "sass-loader": "^10.0.0",
     "vue-cli-plugin-vuetify": "~2.4.2",
     "vue-template-compiler": "^2.6.11",
-    "vuetify-loader": "^1.7.0"
+    "vuetify-loader": "^1.7.0",
+    "worker-loader": "^3.0.8"
   },
   "eslintConfig": {
     "root": true,

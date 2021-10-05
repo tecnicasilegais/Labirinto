@@ -13,12 +13,12 @@
             <v-row class="d-flex flex-column">
               <v-col>
                 <v-card rounded="lg" elevation="0">
+                  <v-overlay :value="loading" absolute>
+                    <v-progress-circular indeterminate size="64"></v-progress-circular>
+                  </v-overlay>
                   <v-card-title>Parâmetros</v-card-title>
                   <v-divider></v-divider>
-                  <v-skeleton-loader
-                    type="list-item,list-item,list-item,list-item,list-item,actions"
-                    v-if="loading"></v-skeleton-loader>
-                  <v-card-text v-else>
+                  <v-card-text>
                     <v-row dense>
                       <v-col class="pr-5">
                         <label for="file_maze" class="pl-0">Arquivo de labirinto</label>
@@ -169,10 +169,7 @@
                 <v-card rounded="lg" elevation="0">
                   <v-card-title>Saída</v-card-title>
                   <v-divider></v-divider>
-                  <v-skeleton-loader
-                    type="list-item,list-item,list-item,list-item,list-item,list-item"
-                    v-if="loading"></v-skeleton-loader>
-                  <v-card-text v-else>
+                  <v-card-text>
                     <div class="console">
                       <div class="console-top d-flex">
                         <v-spacer></v-spacer>
@@ -190,8 +187,7 @@
             <v-card rounded="lg" elevation="0">
               <v-card-title>Labirinto</v-card-title>
               <v-divider></v-divider>
-              <v-skeleton-loader type="table" v-if="loading"></v-skeleton-loader>
-              <v-card-text v-else>
+              <v-card-text>
                 <v-row>
                   <v-col v-if="maze.rawContent" class="d-flex justify-center">
                     <table class="maze">
@@ -234,8 +230,8 @@
 <script>
 import 'vue-code-highlight/themes/prism-okaidia.css';
 import 'vue-code-highlight/themes/window.css';
-import { findPath } from '@/app';
-import CloneDeep    from 'lodash/cloneDeep';
+import CloneDeep from 'lodash/cloneDeep';
+import Worker    from 'worker-loader!./app';
 
 export default {
   data:    () => ({
@@ -290,10 +286,6 @@ export default {
     output:     '',
   }),
   methods: {
-    inp(model) {
-      console.log(model);
-      model.value = 10;
-    },
     walkPath(path) {
       const currPosition = CloneDeep(this.maze.position.entrance);
 
@@ -333,12 +325,42 @@ export default {
       normalizedParameters.tempVariation.value = 1 - (normalizedParameters.tempVariation.value / 1000);
 
       this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
-      const {
-              workingPath, output,
-            }               = findPath(this.maze.displayMaze, this.maze.position, normalizedParameters, this.output);
-      this.output           = output;
-      this.walkPath(workingPath);
-      console.log(workingPath);
+
+
+      const worker     = new Worker();
+      worker.onmessage = (msg) => {
+        let data = msg.data;
+        switch (data.contentType) {
+          case 'console':
+            this.output += data.content;
+            break;
+          case 'result':
+            this.walkPath(data.content);
+            break;
+          case 'status':
+            if (data.content === 'started') {
+              this.loading = true;
+            } else if (data.content === 'finished') {
+              this.loading = false;
+            }
+            break;
+        }
+      };
+
+      worker.postMessage({
+        maze: this.maze.displayMaze, position: this.maze.position, parameters: normalizedParameters,
+      });
+
+      //sendMessage({
+      //  maze: this.maze.displayMaze, position: this.maze.position, parameters: normalizedParameters,
+      //});
+
+      //const {
+      //        workingPath, output,
+      //      }               = findPath(this.maze.displayMaze, this.maze.position, normalizedParameters, this.output);
+      //this.output           = output;
+      //this.walkPath(workingPath);
+      //console.log(workingPath);
     },
     importTxt() {
       if (!this.maze.file) {

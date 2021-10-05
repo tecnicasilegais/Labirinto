@@ -6,7 +6,6 @@ let _maze;
 let _entrance;
 let _exit;
 let _limits;
-let _output;
 
 function alreadyVisited(cell) {
   return cell.wasVisited === true;
@@ -190,27 +189,54 @@ function calculateFitness(path, weights) {
   return fitness;
 }
 
+onmessage = e => {
+  let data = e.data;
+  console.log('worker got in right place ', data);
+  let result = findPath(data.maze, data.position, data.parameters);
+  sendResult(result);
+};
+
+function sendResult(msg) {
+  postMessage({
+    contentType: 'result',
+    content:     msg,
+  });
+}
+
+function sendStatus(msg) {
+  postMessage({
+    contentType: 'status',
+    content:     msg,
+  });
+}
+
+function writeOutput(str) {
+  postMessage({
+    contentType: 'console',
+    content:     str,
+  });
+}
+
 /**
  * Tries to find a path that solves the maze using the Simulated Annealing method
  * @param maze
- * @param entrance
- * @param exit
+ * @param positions
  * @param parameters
- * @param output
  */
-export function findPath(maze, { entrance, exit }, parameters, output) {
-  _output   = output;
+export function findPath(maze, positions, parameters) {
   _maze     = maze;
-  _entrance = entrance;
-  _exit     = exit;
+  _entrance = positions.entrance;
+  _exit     = positions.exit;
   _limits   = {
     top: 0, bottom: _maze.length - 1, right: _maze[0].length - 1, left: 0,
   };
 
-  _output += `ciclos: ${parameters.cycles.value}, tempInicial: ${parameters.tempInitial.value}, `;
-  _output += `variaçãoTemp: ${parameters.tempVariation.value}, chanceRuim: ${parameters.percentageWrong.value}, `;
-  _output += `chanceBom: ${parameters.percentageGood.value}, pesoSaída: ${parameters.fitnessWeight.pathExit.value}, `;
-  _output += `pesoRepetição: ${parameters.fitnessWeight.pathRepeat.value}\n`;
+  sendStatus('started');
+
+  writeOutput(`ciclos: ${parameters.cycles.value}, tempInicial: ${parameters.tempInitial.value}, `);
+  writeOutput(`variaçãoTemp: ${parameters.tempVariation.value}, chanceRuim: ${parameters.percentageWrong.value}, `);
+  writeOutput(`chanceBom: ${parameters.percentageGood.value}, pesoSaída: ${parameters.fitnessWeight.pathExit.value}, `);
+  writeOutput(`pesoRepetição: ${parameters.fitnessWeight.pathRepeat.value}\n`);
 
   let temperature   = parameters.tempInitial.value;
   let tempVariation = parameters.tempVariation.value;
@@ -220,18 +246,18 @@ export function findPath(maze, { entrance, exit }, parameters, output) {
   let nextPath;
   let nextFitness;
 
-  _output += 'Simulated Annealing iniciado\n';
+  writeOutput('Simulated Annealing iniciado\n');
   //Start the cycle until numInteractions is reached
   for (let i = 0; i <= parameters.cycles.value; i++) {
-    _output += `Ciclo ${i}, \t Temperatura ${temperature}\n`;
-    _output += `Solução atual: ${currentPath}\n`;
+    writeOutput(`Ciclo ${i}, \t Temperatura ${temperature}\n`);
+    writeOutput(`Solução atual: ${currentPath}\n`);
 
     if (currentFitness === 0) {
       break;
     }
     nextPath    = buildNextPath([...currentPath], parameters);
     nextFitness = calculateFitness(nextPath, parameters.fitnessWeight);
-    _output += `Solução vizinha: ${nextPath}\n`;
+    writeOutput(`Solução vizinha: ${nextPath}\n`);
 
     let energy = nextFitness - currentFitness;
     if (energy <= 0) {
@@ -241,19 +267,20 @@ export function findPath(maze, { entrance, exit }, parameters, output) {
       let probability = Math.exp(-energy / temperature);
       let random      = getRandomNumber();
       if (random < probability) {
-        _output += 'Aceitou solução pior\n';
+        writeOutput('Aceitou solução pior\n');
         currentPath    = nextPath;
         currentFitness = nextFitness;
       }
     }
     temperature *= tempVariation;
   }
-
   //Conforme temperatura baixa, escolhe menos vezes o pior caminho
 
-  _output += `Final path: ${nextPath}\n`;
-  _output += '\n';
-  return { workingPath: nextPath, output: _output };
+  sendStatus('finished');
+
+  writeOutput(`Final path: ${nextPath}\n`);
+  writeOutput('\n');
+  return nextPath;
 }
 
 /**
