@@ -235,11 +235,11 @@ export default {
     fileError:  [],
     loading:    false,
     parameters: {
-      cycles:          { min: 5, max: 100, step: 10, value: 10 },
-      percentageGood:  { min: 10, max: 80, step: 1, value: 10 },
-      percentageWrong: { min: 10, max: 80, step: 1, value: 30 },
-      tempInitial:     { min: 10, max: 80, step: 1, value: 80 },
-      tempVariation:   { min: 10, max: 80, step: 1, value: 10 },
+      cycles:          { min: 5, max: 100, step: 5, value: 10 },
+      percentageGood:  { min: 10, max: 80, step: 10, value: 10 },
+      percentageWrong: { min: 10, max: 80, step: 10, value: 30 },
+      tempInitial:     { min: 10, max: 80, step: 10, value: 80 },
+      tempVariation:   { min: 10, max: 80, step: 10, value: 10 },
       fitnessWeight:   {
         pathExit:   { min: 1, max: 10, step: 1, value: 2 },
         pathRepeat: { min: 1, max: 10, step: 1, value: 1 },
