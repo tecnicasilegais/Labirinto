@@ -291,7 +291,8 @@ export default {
   }),
   methods: {
     walkPath(path) {
-      const currPosition = CloneDeep(this.maze.position.entrance);
+      this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
+      const currPosition    = CloneDeep(this.maze.position.entrance);
 
       for (let i = 0; i < path.length; i++) {
         setTimeout(() => {
