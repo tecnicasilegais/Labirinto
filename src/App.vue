@@ -54,8 +54,7 @@
                                   :step="parameters.tempInitial.step">
                           <template v-slot:prepend>
                             <v-text-field v-model="parameters.tempInitial.value" hide-details dense
-                                          outlined single-line type="number" style="width: 85px"
-                                          suffix="%">
+                                          outlined single-line type="number" style="width: 85px">
                             </v-text-field>
                           </template>
                         </v-slider>
@@ -82,7 +81,7 @@
                     </v-row>
                     <v-row dense>
                       <v-col class="pr-5">
-                        <label for="percentage_wrong" class="pl-0">Chance de escolha de vizinho
+                        <label for="percentage_wrong" class="pl-0">Chance de arrumar o primeiro
                           ruim</label>
                         <v-slider v-model="parameters.percentageWrong.value" dense thumb-label
                                   hide-details id="percentage_wrong"
@@ -99,8 +98,8 @@
                         </v-slider>
                       </v-col>
                       <v-col>
-                        <label for="percentage_good" class="pl-0">Chance de escolha de vizinho
-                          bom</label>
+                        <label for="percentage_good" class="pl-0">Chance de escolher possibilidade
+                          válida</label>
                         <v-slider v-model="parameters.percentageGood.value" dense thumb-label
                                   hide-details
                                   id="percentage_good"
@@ -263,10 +262,10 @@ export default {
     loading:    false,
     parameters: {
       cycles:          { min: 1000, max: 10000, step: 1000, value: 5000 },
-      percentageGood:  { min: 10, max: 80, step: 5, value: 10 },
-      percentageWrong: { min: 10, max: 80, step: 5, value: 15 },
+      percentageGood:  { min: 10, max: 80, step: 5, value: 30 },
+      percentageWrong: { min: 10, max: 80, step: 5, value: 50 },
       tempInitial:     { min: 10, max: 80, step: 10, value: 80 },
-      tempVariation:   { min: 10, max: 80, step: 10, value: 10 },
+      tempVariation:   { min: 10, max: 80, step: 10, value: 20 },
       weight:          {
         pathExit:   { min: 1, max: 10, step: 1, value: 3 },
         pathRepeat: { min: 1, max: 10, step: 1, value: 1 },
@@ -351,7 +350,7 @@ export default {
         cycles:          this.parameters.cycles.value,
         percentageGood:  this.parameters.percentageGood.value / 100,
         percentageWrong: this.parameters.percentageWrong.value / 100,
-        tempInitial:     this.parameters.tempInitial.value * 1000000000,
+        tempInitial:     this.parameters.tempInitial.value * 1000000,
         tempVariation:   1 - (this.parameters.tempVariation.value / 10000),
         weight:          {
           pathExit:   this.parameters.weight.pathExit.value,

@@ -98,7 +98,7 @@ function buildNextPath(path, parameters) {
   }
 
   const prctFixed      = parameters.percentageWrong; //porcentagem de vezes que ele resolve o primeiro errado
-  const prctGoodChoice = parameters.percentageGood; //porcentagem de vezes que ele escolhe a primeira opção de caminho alteranativo
+  const prctGoodChoice = parameters.percentageGood; //porcentagem de vezes que ele escolhe a primeira opção de caminho alternativo
 
   const moves = ['U', 'R', 'D', 'L'];
   if (!hit) {
