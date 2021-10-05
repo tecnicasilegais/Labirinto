@@ -181,7 +181,10 @@
           </v-col>
           <v-col cols="12" lg="7">
             <v-card rounded="lg" elevation="0">
-              <v-card-title>Labirinto</v-card-title>
+              <v-card-title>Labirinto
+                <v-img :src="require('@/assets/pudding.png')" @click="walkPath(lastPath)"
+                       class="ml-2" max-height="32px" max-width="48px" contain></v-img>
+              </v-card-title>
               <v-divider></v-divider>
               <v-card-text>
                 <v-row>
@@ -196,10 +199,13 @@
                         <td :style="images.background.l"></td>
                         <td v-for="(cell, j) in line" :key="j" :style="images.background.grass">
                           <div v-if="cell.content === '1'" :style="images.walls[(i+j)%4]"></div>
-                          <div v-else-if="cell.wasVisited" :style="images.path"></div>
                           <div v-else-if="cell.content === 'E'"
-                               :style="images.doors.entrance"></div>
-                          <div v-else-if="cell.content === 'S'" :style="images.doors.exit"></div>
+                               :style="images.doors.entrance">
+                          </div>
+                          <div v-else-if="cell.content === 'S'" :style="images.doors.exit">
+                          </div>
+                          <div v-if="cell.wasVisited" :style="images.path">
+                          </div>
                         </td>
                         <td :style="images.background.r"></td>
                       </tr>
@@ -231,13 +237,14 @@ import Worker    from 'worker-loader!./app';
 
 export default {
   data:    () => ({
+    lastPath:   [],
     outputList: [],
     fileError:  [],
     loading:    false,
     parameters: {
-      cycles:          { min: 5, max: 100, step: 5, value: 10 },
+      cycles:          { min: 5, max: 100, step: 5, value: 5 },
       percentageGood:  { min: 10, max: 80, step: 10, value: 10 },
-      percentageWrong: { min: 10, max: 80, step: 10, value: 30 },
+      percentageWrong: { min: 10, max: 80, step: 10, value: 10 },
       tempInitial:     { min: 10, max: 80, step: 10, value: 80 },
       tempVariation:   { min: 10, max: 80, step: 10, value: 10 },
       fitnessWeight:   {
@@ -262,6 +269,7 @@ export default {
         exit:     { backgroundImage: `url(${require('@/assets/exit.png')})` },
       },
       path:       { backgroundImage: `url(${require('@/assets/path.png')})` },
+      pudding:    { backgroundImage: `url(${require('@/assets/pudding.png')})` },
       walls:      [
         { backgroundImage: `url(${require('@/assets/w1.png')})` },
         { backgroundImage: `url(${require('@/assets/w2.png')})` },
@@ -285,28 +293,30 @@ export default {
     walkPath(path) {
       const currPosition = CloneDeep(this.maze.position.entrance);
 
-      for (const movement of path) {
-        switch (movement) {
-          case 'U':
-            currPosition.line--;
-            break;
-          case 'D':
-            currPosition.line++;
-            break;
-          case 'R':
-            currPosition.col++;
-            break;
-          case 'L':
-            currPosition.col--;
-            break;
-          default:
-            throw new Error('Invalid movement');
-        }
-        if (currPosition.line >= 0 && currPosition.col >= 0
-            && currPosition.line <= this.maze.size - 1 && currPosition.col <= this.maze.size - 1
-            && this.maze.displayMaze[currPosition.line][currPosition.col].content === '0') {
-          this.maze.displayMaze[currPosition.line][currPosition.col].wasVisited = true;
-        }
+      for (let i = 0; i < path.length; i++) {
+        setTimeout(() => {
+          switch (path[i]) {
+            case 'U':
+              currPosition.line--;
+              break;
+            case 'D':
+              currPosition.line++;
+              break;
+            case 'R':
+              currPosition.col++;
+              break;
+            case 'L':
+              currPosition.col--;
+              break;
+            default:
+              throw new Error('Invalid movement');
+          }
+          if (currPosition.line >= 0 && currPosition.col >= 0
+              && currPosition.line <= this.maze.size - 1 && currPosition.col <= this.maze.size - 1
+              && this.maze.displayMaze[currPosition.line][currPosition.col].content === '0') {
+            this.maze.displayMaze[currPosition.line][currPosition.col].wasVisited = true;
+          }
+        }, i * 250);
       }
     },
     clearConsole() {
@@ -314,7 +324,7 @@ export default {
     },
     solveMaze() {
       let normalizedParameters                 = CloneDeep(this.parameters);
-      normalizedParameters.cycles.value *= normalizedParameters.cycles.max;
+      normalizedParameters.cycles.value *= 1000;
       normalizedParameters.percentageGood.value /= 100;
       normalizedParameters.percentageWrong.value /= 100;
       normalizedParameters.tempInitial.value *= 1000000000;
@@ -332,6 +342,7 @@ export default {
             break;
           case 'result':
             this.walkPath(data.content);
+            this.lastPath = data.content;
             break;
           case 'status':
             if (data.content === 'started') {
@@ -505,7 +516,7 @@ table.maze {
     width      : 48px;
     text-align : center;
 
-    > div {
+    div {
       height : 100%;
       width  : 100%;
     }
