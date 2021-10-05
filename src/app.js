@@ -278,7 +278,7 @@ export function findPath(maze, positions, parameters) {
 
   sendStatus('finished');
 
-  writeOutput(`Final path: ${nextPath}\n`);
+  writeOutput(`Solução final: ${nextPath}\n`);
   writeOutput('\n');
   return nextPath;
 }
