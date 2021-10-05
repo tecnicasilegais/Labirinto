@@ -237,7 +237,7 @@ export default {
     parameters: {
       cycles:          { min: 10, max: 1000, step: 10, value: 10 },
       percentageGood:  { min: 10, max: 80, step: 1, value: 10 },
-      percentageWrong: { min: 10, max: 80, step: 1, value: 10 },
+      percentageWrong: { min: 10, max: 80, step: 1, value: 30 },
       tempInitial:     { min: 10, max: 80, step: 1, value: 80 },
       tempVariation:   { min: 10, max: 80, step: 1, value: 10 },
       fitnessWeight:   {
@@ -317,7 +317,7 @@ export default {
       normalizedParameters.cycles.value *= normalizedParameters.cycles.max;
       normalizedParameters.percentageGood.value /= 100;
       normalizedParameters.percentageWrong.value /= 100;
-      normalizedParameters.tempInitial.value *= 10000;
+      normalizedParameters.tempInitial.value *= 10000000000;
       normalizedParameters.tempVariation.value = 1 - (normalizedParameters.tempVariation.value / 1000);
 
       this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
