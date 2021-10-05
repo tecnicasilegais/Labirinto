@@ -1,5 +1,4 @@
 import * as getRandomNumber from 'random-number';
-import CloneDeep            from 'lodash/cloneDeep';
 
 const characters = 'UDRL';
 let _maze;
@@ -7,8 +6,8 @@ let _entrance;
 let _exit;
 let _limits;
 
-function alreadyVisited(cell) {
-  return cell.wasVisited === true;
+function alreadyVisited(visitedPositions, currPosition) {
+  return visitedPositions[currPosition.line]?.[currPosition.col] === true;
 }
 
 /**
@@ -53,10 +52,10 @@ function buildNextPath(path, parameters) {
   let firstWrong        = null; //indice do primeiro nodo incorreto no path
   const currPosition    = { line: _entrance.line, col: _entrance.col };
   const walkedPositions = [];
-  let cMaze             = CloneDeep(_maze);
+  let visitedPositions  = {};
 
   for (let i = 0; i < path.length; i++) {
-    walkedPositions.push(cMaze[currPosition.line][currPosition.col]);
+    walkedPositions.push(_maze[currPosition.line][currPosition.col]);
 
     const movement = path[i];
     switch (movement) {
@@ -82,19 +81,19 @@ function buildNextPath(path, parameters) {
       }
       break;
     } else {
-      if (hitsWall(cMaze[currPosition.line][currPosition.col])) {
+      if (hitsWall(_maze[currPosition.line][currPosition.col])) {
         if (!hit) {
           hit        = true;
           firstWrong = i;
         }
       }
-      if (alreadyVisited(cMaze[currPosition.line][currPosition.col])) {
+      if (alreadyVisited(visitedPositions, currPosition)) {
         if (!hit) {
           hit        = true;
           firstWrong = i;
         }
       }
-      cMaze[currPosition.line][currPosition.col].wasVisited = true;
+      (visitedPositions[currPosition.line] ??= {})[currPosition.col] ??= true;
     }
   }
 
@@ -146,8 +145,8 @@ function buildNextPath(path, parameters) {
 }
 
 function calculateFitness(path, weights) {
-  let fitness = 0;
-  let cMaze   = CloneDeep(_maze);
+  let fitness          = 0;
+  let visitedPositions = {};
 
   const currPosition = { line: _entrance.line, col: _entrance.col };
 
@@ -173,13 +172,13 @@ function calculateFitness(path, weights) {
     if (outOfMaze(currPosition)) {
       fitness += weights.pathExit.value;
     } else {
-      if (hitsWall(cMaze[currPosition.line][currPosition.col])) {
+      if (hitsWall(_maze[currPosition.line][currPosition.col])) {
         fitness++;
       }
-      if (alreadyVisited(cMaze[currPosition.line][currPosition.col])) {
+      if (alreadyVisited(visitedPositions, currPosition)) {
         fitness += weights.pathRepeat.value;
       }
-      cMaze[currPosition.line][currPosition.col].wasVisited = true;
+      (visitedPositions[currPosition.line] ??= {})[currPosition.col] ??= true;
     }
   }
 
@@ -248,16 +247,17 @@ export function findPath(maze, positions, parameters) {
 
   writeOutput('Simulated Annealing iniciado\n');
   //Start the cycle until numInteractions is reached
+  let cycleOutput;
   for (let i = 0; i <= parameters.cycles.value; i++) {
-    writeOutput(`Ciclo ${i}, \t Temperatura ${temperature}\n`);
-    writeOutput(`Solução atual: ${currentPath}\n`);
+    cycleOutput = `Ciclo ${i}, \t Temperatura ${temperature}\n`;
+    cycleOutput += `Solução atual: ${currentPath}\n`;
 
     if (currentFitness === 0) {
       break;
     }
     nextPath    = buildNextPath([...currentPath], parameters);
     nextFitness = calculateFitness(nextPath, parameters.fitnessWeight);
-    writeOutput(`Solução vizinha: ${nextPath}\n`);
+    cycleOutput += `Solução vizinha: ${nextPath}\n`;
 
     let energy = nextFitness - currentFitness;
     if (energy <= 0) {
@@ -267,12 +267,13 @@ export function findPath(maze, positions, parameters) {
       let probability = Math.exp(-energy / temperature);
       let random      = getRandomNumber();
       if (random < probability) {
-        writeOutput('Aceitou solução pior\n');
+        cycleOutput += 'Aceitou solução pior\n';
         currentPath    = nextPath;
         currentFitness = nextFitness;
       }
     }
     temperature *= tempVariation;
+    writeOutput(cycleOutput);
   }
   //Conforme temperatura baixa, escolhe menos vezes o pior caminho
 

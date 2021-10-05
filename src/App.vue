@@ -1,11 +1,5 @@
 <template>
   <v-app id="inspire">
-    <v-app-bar app color="white" flat>
-      <v-spacer/>
-      <v-toolbar-title class="text-h5">IA - T1</v-toolbar-title>
-      <v-spacer/>
-    </v-app-bar>
-
     <v-main class="grey lighten-3">
       <v-container>
         <v-row>
@@ -176,7 +170,9 @@
                         <v-icon @click="clearConsole" color="white" class="mr-2">mdi-delete-sweep
                         </v-icon>
                       </div>
-                      <pre class="ma-0" ref="logger">{{ output }}</pre>
+                      <div class="ma-0 pre-container" v-chat-scroll>
+                        <pre v-for="(line, i) in outputList" :key="i">{{ line }}</pre>
+                      </div>
                     </div>
                   </v-card-text>
                 </v-card>
@@ -235,6 +231,7 @@ import Worker    from 'worker-loader!./app';
 
 export default {
   data:    () => ({
+    outputList: [],
     fileError:  [],
     loading:    false,
     parameters: {
@@ -283,7 +280,6 @@ export default {
       originalCopy: null,
       size:         null,
     },
-    output:     '',
   }),
   methods: {
     walkPath(path) {
@@ -314,7 +310,7 @@ export default {
       }
     },
     clearConsole() {
-      this.output = '';
+      this.outputList = [];
     },
     solveMaze() {
       let normalizedParameters                 = CloneDeep(this.parameters);
@@ -332,7 +328,7 @@ export default {
         let data = msg.data;
         switch (data.contentType) {
           case 'console':
-            this.output += data.content;
+            this.outputList.push(data.content);
             break;
           case 'result':
             this.walkPath(data.content);
@@ -346,21 +342,10 @@ export default {
             break;
         }
       };
-
+      worker.onerror   = console.error;
       worker.postMessage({
         maze: this.maze.displayMaze, position: this.maze.position, parameters: normalizedParameters,
       });
-
-      //sendMessage({
-      //  maze: this.maze.displayMaze, position: this.maze.position, parameters: normalizedParameters,
-      //});
-
-      //const {
-      //        workingPath, output,
-      //      }               = findPath(this.maze.displayMaze, this.maze.position, normalizedParameters, this.output);
-      //this.output           = output;
-      //this.walkPath(workingPath);
-      //console.log(workingPath);
     },
     importTxt() {
       if (!this.maze.file) {
@@ -451,13 +436,13 @@ export default {
     height              : 35px;
     width               : 100%;
 
-    + pre {
+    + .pre-container {
       background-color : #272822;
       color-scheme     : dark;
       border-radius    : 0 0 10px 10px;
       color            : #fff;
       display          : flex;
-      flex-direction   : column-reverse;
+      flex-direction   : column;
       font-family      : Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
       hyphens          : none;
       line-height      : 1.5;
