@@ -47,6 +47,27 @@ function getRandomInteger(qtd) {
   return Math.floor(Math.random() * qtd);
 }
 
+function getRandomNumber(qtd) {
+  return Math.random() * qtd;
+}
+
+function populationInitialization() {
+  //start population with weights of each neuron in the network
+  //supposed to be 10 chromosomes each having 44 genes
+  let chromosomes = 10;
+  let genes = 44;
+  const population = [];
+
+  for (let chromo = 0; chromo < chromosomes; chromo++) {
+    let chromosome = [];
+    for (let g = 0; g < genes; g++) {
+      chromosome.push(getRandomNumber(2));//here is yet to have a definition by the professor
+    }
+    population.push(chromosome);
+  }
+
+}
+
 function buildNextPath(path, parameters) {
   let hit               = false;
   let firstWrong        = null; //indice do primeiro nodo incorreto no path
