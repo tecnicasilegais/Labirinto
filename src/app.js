@@ -56,6 +56,7 @@ function getRandomNumber(qtd) {
 function populationInitialization() {
   //start population with weights of each neuron in the network
   //supposed to be 10 chromosomes each having 44 genes
+  //each weight need to be between -1 and 1
   let chromosomes = 10;
   let genes = 44;
   const population = [];
@@ -63,11 +64,12 @@ function populationInitialization() {
   for (let chromo = 0; chromo < chromosomes; chromo++) {
     let chromosome = [];
     for (let g = 0; g < genes; g++) {
-      chromosome.push(getRandomNumber(2));//here is yet to have a definition by the professor
+      chromosome.push((Math.random() * 2) - 1);
     }
     population.push(chromosome);
   }
-
+  
+  return population;
 }
 
 function buildNextPath(path, parameters) {
@@ -167,7 +169,12 @@ function buildNextPath(path, parameters) {
   return path;
 }
 
-function calculateFitness(path, weights) {
+function calculateFitness(population) {
+  //here we need to set up the model with the population weights
+  //the neural network is supposed to give us a score with the current path
+  //
+
+  
   let fitness = 0;
   let cMaze   = CloneDeep(_maze);
 
@@ -209,6 +216,105 @@ function calculateFitness(path, weights) {
   fitness += movToExit;
   //_output += `indivíduo '${path}', aptidão '${fitness}', distânciaSaída '${movToExit}'\n`;
   return fitness;
+}
+
+function calculateFitness2(path, weights) {
+  let fitness = 0;
+  let cMaze   = CloneDeep(_maze);
+
+  const currPosition = { line: _entrance.line, col: _entrance.col };
+
+  // Para cada movimento, verificar se está mais perto da saída, atravessa paredes ou sai do mapa,
+  // verificar distancia ao final e somar quantidade de movimentos restantes
+  for (const movement of path) {
+    switch (movement) {
+      case 'U':
+        currPosition.line--;
+        break;
+      case 'D':
+        currPosition.line++;
+        break;
+      case 'R':
+        currPosition.col++;
+        break;
+      case 'L':
+        currPosition.col--;
+        break;
+      default:
+        throw new Error('Invalid movement');
+    }
+    if (outOfMaze(currPosition)) {
+      fitness += weights.pathExit.value;
+    } else {
+      if (hitsWall(cMaze[currPosition.line][currPosition.col])) {
+        fitness++;
+      }
+      if (alreadyVisited(cMaze[currPosition.line][currPosition.col])) {
+        fitness += weights.pathRepeat.value;
+      }
+      cMaze[currPosition.line][currPosition.col].wasVisited = true;
+    }
+  }
+
+  const movToExit = nOfMovementsToExit(currPosition);
+  fitness += movToExit;
+  //_output += `indivíduo '${path}', aptidão '${fitness}', distânciaSaída '${movToExit}'\n`;
+  return fitness;
+}
+
+export function newfindPath(maze, { entrance, exit }, parameters, output) {
+  _output   = output;
+  _maze     = maze;
+  _entrance = entrance;
+  _exit     = exit;
+  _limits   = {
+    top: 0, bottom: _maze.length - 1, right: _maze[0].length - 1, left: 0,
+  };
+
+  _output += `ciclos: ${parameters.cycles.value}, tempInicial: ${parameters.tempInitial.value}, `;
+  _output += `variaçãoTemp: ${parameters.tempVariation.value}, chanceRuim: ${parameters.percentageWrong.value}, `;
+  _output += `chanceBom: ${parameters.percentageGood.value}, pesoSaída: ${parameters.fitnessWeight.pathExit.value}, `;
+  _output += `pesoRepetição: ${parameters.fitnessWeight.pathRepeat.value}\n`;
+
+  let population = populationInitialization();
+  let fitness = calculateFitness(population);
+  let nextPath;
+  let nextFitness;
+
+  _output += 'Simulated Annealing iniciado\n';
+  //Start the cycle until numInteractions is reached
+  for (let i = 0; i <= parameters.cycles.value; i++) {
+    _output += `Ciclo ${i}, \t Temperatura ${temperature}\n`;
+    _output += `Solução atual: ${currentPath}\n`;
+
+    if (currentFitness === 0) {
+      break;
+    }
+    nextPath    = buildNextPath([...currentPath], parameters);
+    nextFitness = calculateFitness(nextPath, parameters.fitnessWeight);
+    _output += `Solução vizinha: ${nextPath}\n`;
+
+    let energy = nextFitness - currentFitness;
+    if (energy <= 0) {
+      currentPath    = nextPath;
+      currentFitness = nextFitness;
+    } else {
+      let probability = Math.exp(-energy / temperature);
+      let random      = getRandomNumber();
+      if (random < probability) {
+        _output += 'Aceitou solução pior\n';
+        currentPath    = nextPath;
+        currentFitness = nextFitness;
+      }
+    }
+    temperature *= tempVariation;
+  }
+
+  //Conforme temperatura baixa, escolhe menos vezes o pior caminho
+
+  _output += `Final path: ${nextPath}\n`;
+  _output += '\n';
+  return { workingPath: nextPath, output: _output };
 }
 
 /**
