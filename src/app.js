@@ -5,6 +5,7 @@ let _maze;
 let _entrance;
 let _exit;
 let _limits;
+let _path;
 
 function alreadyVisited(visitedPositions, currPosition) {
   return visitedPositions[currPosition.line]?.[currPosition.col] === true;
@@ -51,8 +52,8 @@ function populationInitialization() {
   //start population with weights of each neuron in the network
   //supposed to be 10 chromosomes each having 44 genes
   //each weight need to be between -1 and 1
-  let chromosomes  = 10;
-  let genes        = 44;
+  let chromosomes = 10;
+  let genes = 44;
   const population = [];
 
   for (let chromo = 0; chromo < chromosomes; chromo++) {
@@ -69,8 +70,8 @@ function populationInitialization() {
 function buildNextPopulation(population, fitness, percentageMutation) {
   const nextPopulation = [];
   //get the biggest fitness position
-  let biggest          = 0;
-  let pos              = 0;
+  let biggest = 0;
+  let pos = 0;
   for (let i = 0; i < fitness.length; i++) {
     const element = fitness[i];
     if (element > biggest) {
@@ -84,28 +85,28 @@ function buildNextPopulation(population, fitness, percentageMutation) {
   while (nextPopulation.length < 10) {
     let father = [];
     let mother = [];
-    let first  = 0;
+    let first = 0;
     let second = 0;
 
     //get the father, choosing the best between two chosen randomly
 
-    first  = getRandomInteger(population.length);
+    first = getRandomInteger(population.length);
     second = getRandomInteger(population.length);
 
-    if (fitness[first] >= fitness[second]) {
+    if(fitness[first] >= fitness[second]){
       father = population[first];
-    } else {
+    }else{
       father = population[second];
     }
 
     //get the mother, choosing the best between two chosen randomly
 
-    first  = getRandomInteger(population.length);
+    first = getRandomInteger(population.length);
     second = getRandomInteger(population.length);
 
-    if (fitness[first] >= fitness[second]) {
+    if(fitness[first] >= fitness[second]){
       mother = population[first];
-    } else {
+    }else{
       mother = population[second];
     }
 
@@ -121,9 +122,9 @@ function buildNextPopulation(population, fitness, percentageMutation) {
 
   //now the mutation
 
-  if (percentageMutation <= Math.random()) {
-    let chromosome                   = getRandomInteger(nextPopulation.length);
-    let gene                         = getRandomInteger(nextPopulation[0].length);
+  if (percentageMutation <= Math.random()){
+    let chromosome = getRandomInteger(nextPopulation.length);
+    let gene = getRandomInteger(nextPopulation[0].length);
     nextPopulation[chromosome][gene] = (Math.random() * 2) - 1;
   }
 
@@ -156,56 +157,31 @@ export function findPath(maze, positions, parameters) {
   _limits   = {
     top: 0, bottom: _maze.length - 1, right: _maze[0].length - 1, left: 0,
   };
+  _path     = '';
 
   sendStatus('started');
 
-  let { cycles, percentageGood, percentageWrong, tempInitial, tempVariation, weight } = parameters;
+  let { cycles, percentageMutation } = parameters;
 
-  let currentPath    = generateString(1);
-  let currentFitness = calculateFitness(currentPath, weight);
-  let nextPath;
-  let nextFitness;
-
-  writeOutput(`ciclos: ${cycles}, tempInicial: ${tempInitial}, \`variaçãoTemp: ${tempVariation}\n`);
-  writeOutput(`chanceBom: ${percentageGood}, chanceRuim: ${percentageWrong}\n`);
-  writeOutput(`pesoRepetição: ${weight.pathRepeat}, pesoBatida:${weight.pathWall}, pesoSaída: ${weight.pathExit}\n`);
-  writeOutput('Simulated Annealing iniciado\n');
+  let population = populationInitialization();
+  let fitness = calculateFitness(population);
+  writeOutput('Procura pelo caminho iniciado\n');
   //Start the cycle until numInteractions is reached
-  let cycleOutput;
   for (let i = 0; i <= cycles; i++) {
-    cycleOutput = `Ciclo ${i}, \t Temperatura ${tempInitial}\n`;
-    cycleOutput += `Solução atual: ${currentPath}\n`;
+    writeOutput(`Ciclo ${i}`);
 
-    if (currentFitness === 0) {
+    population = buildNextPopulation(population, fitness, percentageMutation);
+    fitness = calculateFitness(population);
+
+    if( _path !== ''){
       break;
     }
-    //nextPath    = buildNextPath([...currentPath], parameters);
-    nextFitness = calculateFitness(nextPath, weight);
-    cycleOutput += `Solução vizinha: ${nextPath}\n`;
-
-    let energy = nextFitness - currentFitness;
-    if (energy <= 0) {
-      currentPath    = nextPath;
-      currentFitness = nextFitness;
-    } else {
-      let probability = Math.exp(-energy / tempInitial);
-      let random      = getRandomNumber();
-      if (random < probability) {
-        cycleOutput += 'Aceitou solução pior\n';
-        currentPath    = nextPath;
-        currentFitness = nextFitness;
-      }
-    }
-    tempInitial *= tempVariation;
-    writeOutput(cycleOutput);
   }
-  //Conforme temperatura baixa, escolhe menos vezes o pior caminho
-
   sendStatus('finished');
 
-  writeOutput(`Solução final: ${nextPath}\n`);
+  writeOutput(`Final path: ${_path}\n`);
   writeOutput('\n');
-  return nextPath;
+  return _path;
 }
 
 /**
