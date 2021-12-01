@@ -249,9 +249,9 @@
 </template>
 
 <script>
+import CloneDeep from 'lodash/cloneDeep';
 import 'vue-code-highlight/themes/prism-okaidia.css';
 import 'vue-code-highlight/themes/window.css';
-import CloneDeep from 'lodash/cloneDeep';
 import Worker    from 'worker-loader!./app';
 
 export default {
@@ -261,16 +261,8 @@ export default {
     fileError:  [],
     loading:    false,
     parameters: {
-      cycles:          { min: 1000, max: 10000, step: 1000, value: 5000 },
-      percentageGood:  { min: 10, max: 80, step: 5, value: 30 },
-      percentageWrong: { min: 10, max: 80, step: 5, value: 50 },
-      tempInitial:     { min: 10, max: 80, step: 10, value: 80 },
-      tempVariation:   { min: 10, max: 80, step: 10, value: 20 },
-      weight:          {
-        pathExit:   { min: 1, max: 10, step: 1, value: 3 },
-        pathRepeat: { min: 1, max: 10, step: 1, value: 1 },
-        pathWall:   { min: 1, max: 10, step: 1, value: 1 },
-      },
+      cycles:             { min: 1000, max: 10000, step: 1000, value: 5000 },
+      percentageMutation: { min: 10, max: 80, step: 5, value: 50 },
     },
     images:     {
       background: {

@@ -1,5 +1,3 @@
-import * as getRandomNumber from 'random-number';
-
 const characters = 'UDRL';
 let _maze;
 let _entrance;
@@ -52,8 +50,8 @@ function populationInitialization() {
   //start population with weights of each neuron in the network
   //supposed to be 10 chromosomes each having 44 genes
   //each weight need to be between -1 and 1
-  let chromosomes = 10;
-  let genes = 44;
+  let chromosomes  = 10;
+  let genes        = 44;
   const population = [];
 
   for (let chromo = 0; chromo < chromosomes; chromo++) {
@@ -70,8 +68,8 @@ function populationInitialization() {
 function buildNextPopulation(population, fitness, percentageMutation) {
   const nextPopulation = [];
   //get the biggest fitness position
-  let biggest = 0;
-  let pos = 0;
+  let biggest          = 0;
+  let pos              = 0;
   for (let i = 0; i < fitness.length; i++) {
     const element = fitness[i];
     if (element > biggest) {
@@ -85,28 +83,28 @@ function buildNextPopulation(population, fitness, percentageMutation) {
   while (nextPopulation.length < 10) {
     let father = [];
     let mother = [];
-    let first = 0;
+    let first  = 0;
     let second = 0;
 
     //get the father, choosing the best between two chosen randomly
 
-    first = getRandomInteger(population.length);
+    first  = getRandomInteger(population.length);
     second = getRandomInteger(population.length);
 
-    if(fitness[first] >= fitness[second]){
+    if (fitness[first] >= fitness[second]) {
       father = population[first];
-    }else{
+    } else {
       father = population[second];
     }
 
     //get the mother, choosing the best between two chosen randomly
 
-    first = getRandomInteger(population.length);
+    first  = getRandomInteger(population.length);
     second = getRandomInteger(population.length);
 
-    if(fitness[first] >= fitness[second]){
+    if (fitness[first] >= fitness[second]) {
       mother = population[first];
-    }else{
+    } else {
       mother = population[second];
     }
 
@@ -122,9 +120,9 @@ function buildNextPopulation(population, fitness, percentageMutation) {
 
   //now the mutation
 
-  if (percentageMutation <= Math.random()){
-    let chromosome = getRandomInteger(nextPopulation.length);
-    let gene = getRandomInteger(nextPopulation[0].length);
+  if (percentageMutation <= Math.random()) {
+    let chromosome                   = getRandomInteger(nextPopulation.length);
+    let gene                         = getRandomInteger(nextPopulation[0].length);
     nextPopulation[chromosome][gene] = (Math.random() * 2) - 1;
   }
 
@@ -164,16 +162,16 @@ export function findPath(maze, positions, parameters) {
   let { cycles, percentageMutation } = parameters;
 
   let population = populationInitialization();
-  let fitness = calculateFitness(population);
+  let fitness    = calculateFitness(population);
   writeOutput('Procura pelo caminho iniciado\n');
   //Start the cycle until numInteractions is reached
   for (let i = 0; i <= cycles; i++) {
     writeOutput(`Ciclo ${i}`);
 
     population = buildNextPopulation(population, fitness, percentageMutation);
-    fitness = calculateFitness(population);
+    fitness    = calculateFitness(population);
 
-    if( _path !== ''){
+    if (_path !== '') {
       break;
     }
   }
