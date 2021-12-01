@@ -47,203 +47,109 @@ function getRandomInteger(qtd) {
   return Math.floor(Math.random() * qtd);
 }
 
-function getRandomNumber(qtd) {
-  return Math.random() * qtd;
-}
-
 function populationInitialization() {
   //start population with weights of each neuron in the network
   //supposed to be 10 chromosomes each having 44 genes
-  let chromosomes = 10;
-  let genes = 44;
+  //each weight need to be between -1 and 1
+  let chromosomes  = 10;
+  let genes        = 44;
   const population = [];
 
   for (let chromo = 0; chromo < chromosomes; chromo++) {
     let chromosome = [];
     for (let g = 0; g < genes; g++) {
-      chromosome.push(getRandomNumber(2));//here is yet to have a definition by the professor
+      chromosome.push((Math.random() * 2) - 1);
     }
     population.push(chromosome);
   }
 
+  return population;
 }
 
-function buildNextPath(path, parameters) {
-  let hit               = false;
-  let firstWrong        = null; //indice do primeiro nodo incorreto no path
-  const currPosition    = { line: _entrance.line, col: _entrance.col };
-  const walkedPositions = [];
-  let visitedPositions  = {};
-
-  for (let i = 0; i < path.length; i++) {
-    walkedPositions.push(_maze[currPosition.line][currPosition.col]);
-
-    const movement = path[i];
-    switch (movement) {
-      case 'U':
-        currPosition.line--;
-        break;
-      case 'D':
-        currPosition.line++;
-        break;
-      case 'R':
-        currPosition.col++;
-        break;
-      case 'L':
-        currPosition.col--;
-        break;
-      default:
-        throw new Error('Invalid movement');
-    }
-    if (outOfMaze(currPosition)) {
-      if (!hit) {
-        hit        = true;
-        firstWrong = i;
-      }
-      break;
-    } else {
-      if (hitsWall(_maze[currPosition.line][currPosition.col])) {
-        if (!hit) {
-          hit        = true;
-          firstWrong = i;
-        }
-      }
-      if (alreadyVisited(visitedPositions, currPosition)) {
-        if (!hit) {
-          hit        = true;
-          firstWrong = i;
-        }
-      }
-      (visitedPositions[currPosition.line] ??= {})[currPosition.col] ??= true;
+function buildNextPopulation(population, fitness, percentageMutation) {
+  const nextPopulation = [];
+  //get the biggest fitness position
+  let biggest          = 0;
+  let pos              = 0;
+  for (let i = 0; i < fitness.length; i++) {
+    const element = fitness[i];
+    if (element > biggest) {
+      pos = i;
     }
   }
+  //with the biggest one, send it to the next population
+  nextPopulation.push(population[pos]);
 
-  const prctFixed      = parameters.percentageWrong; //porcentagem de vezes que ele resolve o primeiro errado
-  const prctGoodChoice = parameters.percentageGood; //porcentagem de vezes que ele escolhe a primeira opção de caminho alternativo
+  //now its time to tournament
+  while (nextPopulation.length < 10) {
+    let father = [];
+    let mother = [];
+    let first  = 0;
+    let second = 0;
 
-  const moves = ['U', 'R', 'D', 'L'];
-  if (!hit) {
-    //Caso de ter o caminho completo sem batida
-    path.push(moves[getRandomInteger(3)]);
-  } else {
-    //Caso de existir pelo menos uma batida no caminho
-    let rnd = getRandomNumber();
-    if (prctFixed <= rnd) {
-      //Caso tenha que arrumar o primeiro movimento errado
-      let possibilities = walkedPositions[firstWrong].possiblePaths;
-      possibilities     = possibilities.filter(move => move !== path[firstWrong]);
-      if (possibilities.length > 0) {
-        //modifica para uma das possibilidades de movimento
-        path[firstWrong] = possibilities[getRandomInteger(possibilities.length)];
-      } else {
-        //ou caso nao tenha possibilidades, pega aleatoriamente umas das outras 3 opções de movimento
-        path[firstWrong] = moves.filter(move => move !== path[firstWrong])[getRandomInteger(3)];
-      }
+    //get the father, choosing the best between two chosen randomly
+
+    first  = getRandomInteger(population.length);
+    second = getRandomInteger(population.length);
+
+    if (fitness[first] >= fitness[second]) {
+      father = population[first];
     } else {
-      //caso que pega uma posição aleatoria da sequencia e muda conforme a porcentagem de escolhas boas
-      let pos  = getRandomInteger(path.length);
-      let rnd2 = getRandomNumber();
-      if (pos < walkedPositions.length && prctGoodChoice <= rnd2) {
-        //caso que modifica para uma possibilidade de movimento
-        let possibilities = walkedPositions[pos].possiblePaths;
-        possibilities     = possibilities.filter(move => move !== path[pos]);
-        if (possibilities.length > 0) {
-          //se existir uma possibilidade de movimento
-          path[pos] = possibilities[getRandomInteger(possibilities.length)];
-        } else {
-          //mesmo caso do else mais abaixo
-          path[pos] = moves.filter(move => move !== path[pos])[getRandomInteger(3)];
-        }
-      } else {
-        //caso que pega a posição e adiciona aleatoriamente um movimento
-        path[pos] = moves.filter(move => move !== path[pos])[getRandomInteger(3)];
-      }
+      father = population[second];
     }
+
+    //get the mother, choosing the best between two chosen randomly
+
+    first  = getRandomInteger(population.length);
+    second = getRandomInteger(population.length);
+
+    if (fitness[first] >= fitness[second]) {
+      mother = population[first];
+    } else {
+      mother = population[second];
+    }
+
+    //now the crossover
+    let child = [];
+
+    for (let i = 0; i < mother.length; i++) {
+      child.push((mother[i] + father[i]) / 2);
+    }
+
+    nextPopulation.push(child);
   }
 
-  //Retorna o caminho atualizado
-  return path;
-}
+  //now the mutation
 
-function calculateFitness(path, weights) {
-  let fitness          = 0;
-  let visitedPositions = {};
-
-  const currPosition = { line: _entrance.line, col: _entrance.col };
-
-  // Para cada movimento, verificar se está mais perto da saída, atravessa paredes ou sai do mapa,
-  // verificar distancia ao final e somar quantidade de movimentos restantes
-  for (const movement of path) {
-    switch (movement) {
-      case 'U':
-        currPosition.line--;
-        break;
-      case 'D':
-        currPosition.line++;
-        break;
-      case 'R':
-        currPosition.col++;
-        break;
-      case 'L':
-        currPosition.col--;
-        break;
-      default:
-        throw new Error('Invalid movement');
-    }
-    if (outOfMaze(currPosition)) {
-      fitness += weights.pathExit;
-    } else {
-      if (hitsWall(_maze[currPosition.line][currPosition.col])) {
-        fitness += weights.pathWall;
-      }
-      if (alreadyVisited(visitedPositions, currPosition)) {
-        fitness += weights.pathRepeat;
-      }
-      (visitedPositions[currPosition.line] ??= {})[currPosition.col] ??= true;
-    }
+  if (percentageMutation <= Math.random()) {
+    let chromosome                   = getRandomInteger(nextPopulation.length);
+    let gene                         = getRandomInteger(nextPopulation[0].length);
+    nextPopulation[chromosome][gene] = (Math.random() * 2) - 1;
   }
 
-  const movToExit = nOfMovementsToExit(currPosition);
-  fitness += movToExit;
-  //_output += `indivíduo '${path}', aptidão '${fitness}', distânciaSaída '${movToExit}'\n`;
-  return fitness;
+  return nextPopulation;
+
 }
 
-onmessage = e => {
-  let data = e.data;
-  console.log('worker got in right place ', data);
-  let result = findPath(data.maze, data.position, data.parameters);
-  sendResult(result);
-};
-
-function sendResult(msg) {
-  postMessage({
-    contentType: 'result',
-    content:     msg,
-  });
+function calculateFitness(population) {
+  console.log(population);
+  //here we need to set up the model with the population weights
+  //the neural network is supposed to give us a score with the current path
+  //if the neural network find the path, set _path to finish the execution
+  //need to return a list with each chromossome fitness, so that we can build the next population
 }
 
-function sendStatus(msg) {
-  postMessage({
-    contentType: 'status',
-    content:     msg,
-  });
-}
-
-function writeOutput(str) {
-  postMessage({
-    contentType: 'console',
-    content:     str,
-  });
-}
-
-/**
- * Tries to find a path that solves the maze using the Simulated Annealing method
- * @param maze
- * @param positions
- * @param parameters
- */
 export function findPath(maze, positions, parameters) {
+  // ====== JUST TO STOP ERRORS TEMPORARILY ======
+  alreadyVisited();
+  hitsWall();
+  outOfMaze();
+  nOfMovementsToExit();
+  populationInitialization();
+  buildNextPopulation();
+  console.log(_entrance);
+  // ====== JUST TO STOP ERRORS TEMPORARILY ======
+
   _maze     = maze;
   _entrance = positions.entrance;
   _exit     = positions.exit;
@@ -254,8 +160,6 @@ export function findPath(maze, positions, parameters) {
   sendStatus('started');
 
   let { cycles, percentageGood, percentageWrong, tempInitial, tempVariation, weight } = parameters;
-  //let temperature                                                                     = parameters.tempInitial;
-  //let tempVariation                                                                   = parameters.tempVariation;
 
   let currentPath    = generateString(1);
   let currentFitness = calculateFitness(currentPath, weight);
@@ -275,7 +179,7 @@ export function findPath(maze, positions, parameters) {
     if (currentFitness === 0) {
       break;
     }
-    nextPath    = buildNextPath([...currentPath], parameters);
+    //nextPath    = buildNextPath([...currentPath], parameters);
     nextFitness = calculateFitness(nextPath, weight);
     cycleOutput += `Solução vizinha: ${nextPath}\n`;
 
@@ -316,4 +220,32 @@ function generateString(length) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
+}
+
+onmessage = e => {
+  let data = e.data;
+  console.log('worker got in right place ', data);
+  let result = findPath(data.maze, data.position, data.parameters);
+  sendResult(result);
+};
+
+function sendResult(msg) {
+  postMessage({
+    contentType: 'result',
+    content:     msg,
+  });
+}
+
+function sendStatus(msg) {
+  postMessage({
+    contentType: 'status',
+    content:     msg,
+  });
+}
+
+function writeOutput(str) {
+  postMessage({
+    contentType: 'console',
+    content:     str,
+  });
 }
