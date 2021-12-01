@@ -50,10 +50,6 @@ function getRandomInteger(qtd) {
   return Math.floor(Math.random() * qtd);
 }
 
-function getRandomNumber(qtd) {
-  return Math.random() * qtd;
-}
-
 function populationInitialization() {
   //start population with weights of each neuron in the network
   //supposed to be 10 chromosomes each having 44 genes
@@ -71,6 +67,72 @@ function populationInitialization() {
   }
   
   return population;
+}
+
+function buildNextPopulation(population, fitness, percentageMutation) {
+  const nextPopulation = [];
+  //get the biggest fitness position
+  let biggest = 0;
+  let pos = 0;
+  for (let i = 0; i < fitness.length; i++) {
+    const element = fitness[i];
+    if (element > biggest) {
+      pos = i;
+    }
+  }
+  //with the biggest one, send it to the next population
+  nextPopulation.push(population[pos]);
+
+  //now its time to tournament 
+  while (nextPopulation.length < 10) {
+    let father = [];
+    let mother = [];
+    let first = 0;
+    let second = 0;
+
+    //get the father, choosing the best between two chosen randomly
+
+    first = getRandomInteger(population.length);
+    second = getRandomInteger(population.length);
+
+    if(fitness[first] >= fitness[second]){
+      father = population[first];
+    }else{
+      father = populatio[second];
+    }
+
+    //get the mother, choosing the best between two chosen randomly
+
+    first = getRandomInteger(population.length);
+    second = getRandomInteger(population.length);
+
+    if(fitness[first] >= fitness[second]){
+      mother = population[first];
+    }else{
+      mother = population[second];
+    }
+
+    //now the crossover
+    child = [];
+
+    for (let i = 0; i < mother.length; i++) {
+      element = (mother[i] + father[i]) / 2;
+      child.push(element);
+    }
+    
+    nextPopulation.push(child);
+  }
+
+  //now the mutation
+  
+  if (percentageMutation <= Math.random()){  
+    let chromosome = getRandomInteger(nextPopulation.length);
+    let gene = getRandomInteger(nextPopulation[0].length);
+    nextPopulation[chromosome][gene] = (Math.random() * 2) - 1;
+  }
+
+  return nextPopulation;
+
 }
 
 function calculateFitness(population) {
@@ -102,7 +164,7 @@ export function findPath(maze, { entrance, exit }, parameters, output) {
   for (let i = 0; i <= parameters.cycles.value; i++) {
     _output += `Ciclo ${i}`;
 
-    population    = buildNextPopulation(population, fitness);
+    population = buildNextPopulation(population, fitness, parameters.percentageMutation.value);
     fitness = calculateFitness(population);
     
     if( _path !== ''){
