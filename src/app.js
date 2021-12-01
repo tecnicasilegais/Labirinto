@@ -184,20 +184,6 @@ export function findPath(maze, positions, parameters) {
   return _path;
 }
 
-/**
- * Generates a string using the given characters
- * @param length - length of the string
- * @returns {string} - random string
- */
-function generateString(length) {
-  let result             = '';
-  const charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-}
-
 onmessage = e => {
   let data = e.data;
   console.log('worker got in right place ', data);
