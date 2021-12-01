@@ -1,11 +1,5 @@
 <template>
   <v-app id="inspire">
-    <v-app-bar app color="white" flat>
-      <v-spacer/>
-      <v-toolbar-title class="text-h5">IA - T1</v-toolbar-title>
-      <v-spacer/>
-    </v-app-bar>
-
     <v-main class="grey lighten-3">
       <v-container>
         <v-row>
@@ -13,12 +7,18 @@
             <v-row class="d-flex flex-column">
               <v-col>
                 <v-card rounded="lg" elevation="0">
-                  <v-card-title>Parâmetros</v-card-title>
+                  <v-overlay :value="loading" absolute>
+                    <v-progress-circular indeterminate size="64"></v-progress-circular>
+                  </v-overlay>
+                  <v-card-title>Parâmetros
+                    <v-spacer></v-spacer>
+                    <v-btn elevation="0" small color="primary"
+                           href="maze.txt" download>Labirinto Exemplo
+                      <v-icon right dark>mdi-cloud-download</v-icon>
+                    </v-btn>
+                  </v-card-title>
                   <v-divider></v-divider>
-                  <v-skeleton-loader
-                    type="list-item,list-item,list-item,list-item,list-item,actions"
-                    v-if="loading"></v-skeleton-loader>
-                  <v-card-text v-else>
+                  <v-card-text>
                     <v-row dense>
                       <v-col class="pr-5">
                         <label for="file_maze" class="pl-0">Arquivo de labirinto</label>
@@ -28,7 +28,7 @@
                                       id="file_maze"></v-file-input>
                       </v-col>
                       <v-col>
-                        <label for="cycles" class="pl-0">Ciclos (em milhares)</label>
+                        <label for="cycles" class="pl-0">Ciclos</label>
                         <v-slider v-model="parameters.cycles.value" dense thumb-label hide-details
                                   id="cycles"
                                   :max="parameters.cycles.max"
@@ -54,8 +54,7 @@
                                   :step="parameters.tempInitial.step">
                           <template v-slot:prepend>
                             <v-text-field v-model="parameters.tempInitial.value" hide-details dense
-                                          outlined single-line type="number" style="width: 85px"
-                                          suffix="%">
+                                          outlined single-line type="number" style="width: 85px">
                             </v-text-field>
                           </template>
                         </v-slider>
@@ -82,7 +81,7 @@
                     </v-row>
                     <v-row dense>
                       <v-col class="pr-5">
-                        <label for="percentage_wrong" class="pl-0">Chance de escolha de vizinho
+                        <label for="percentage_wrong" class="pl-0">Chance de arrumar o primeiro
                           ruim</label>
                         <v-slider v-model="parameters.percentageWrong.value" dense thumb-label
                                   hide-details id="percentage_wrong"
@@ -99,8 +98,8 @@
                         </v-slider>
                       </v-col>
                       <v-col>
-                        <label for="percentage_good" class="pl-0">Chance de escolha de vizinho
-                          bom</label>
+                        <label for="percentage_good" class="pl-0">Chance de escolher possibilidade
+                          válida</label>
                         <v-slider v-model="parameters.percentageGood.value" dense thumb-label
                                   hide-details
                                   id="percentage_good"
@@ -120,38 +119,52 @@
                     </v-row>
                     <v-row dense>
                       <v-col class="pr-5">
-                        <label for="path_weight_exit" class="pl-0">Peso de saída do
-                          labirinto</label>
-                        <v-slider v-model="parameters.fitnessWeight.pathExit.value" dense
+                        <label for="path_weight_repeat" class="pl-0">Peso de repetir o
+                          caminho</label>
+                        <v-slider v-model="parameters.weight.pathRepeat.value" dense
                                   thumb-label
-                                  hide-details id="path_weight_exit"
-                                  :max="parameters.fitnessWeight.pathExit.max"
-                                  :min="parameters.fitnessWeight.pathExit.min"
-                                  :step="parameters.fitnessWeight.pathExit.step">
+                                  hide-details id="path_weight_repeat"
+                                  :max="parameters.weight.pathRepeat.max"
+                                  :min="parameters.weight.pathRepeat.min"
+                                  :step="parameters.weight.pathRepeat.step">
                           <template v-slot:prepend>
-                            <v-text-field v-model="parameters.fitnessWeight.pathExit.value"
-                                          hide-details
-                                          dense
-                                          outlined single-line type="number" style="width: 85px">
+                            <v-text-field v-model="parameters.weight.pathRepeat.value"
+                                          hide-details dense outlined single-line type="number"
+                                          style="width: 85px">
+
+                            </v-text-field>
+                          </template>
+                        </v-slider>
+                      </v-col>
+                      <v-col class="pr-5">
+                        <label for="path_weight_wall" class="pl-0">Peso de bater na parede</label>
+                        <v-slider v-model="parameters.weight.pathWall.value" dense
+                                  thumb-label
+                                  hide-details id="path_weight_repeat"
+                                  :max="parameters.weight.pathWall.max"
+                                  :min="parameters.weight.pathWall.min"
+                                  :step="parameters.weight.pathWall.step">
+                          <template v-slot:prepend>
+                            <v-text-field v-model="parameters.weight.pathWall.value"
+                                          hide-details dense outlined single-line type="number"
+                                          style="width: 85px">
+
                             </v-text-field>
                           </template>
                         </v-slider>
                       </v-col>
                       <v-col>
-                        <label for="path_weight_repeat" class="pl-0">Peso de caminho
-                          repetido</label>
-                        <v-slider v-model="parameters.fitnessWeight.pathRepeat.value" dense
+                        <label for="path_weight_exit" class="pl-0">Peso de sair do labirinto</label>
+                        <v-slider v-model="parameters.weight.pathExit.value" dense
                                   thumb-label
-                                  hide-details id="path_weight_repeat"
-                                  :max="parameters.fitnessWeight.pathRepeat.max"
-                                  :min="parameters.fitnessWeight.pathRepeat.min"
-                                  :step="parameters.fitnessWeight.pathRepeat.step">
+                                  hide-details id="path_weight_exit"
+                                  :max="parameters.weight.pathExit.max"
+                                  :min="parameters.weight.pathExit.min"
+                                  :step="parameters.weight.pathExit.step">
                           <template v-slot:prepend>
-                            <v-text-field v-model="parameters.fitnessWeight.pathRepeat.value"
-                                          hide-details
-                                          dense outlined single-line type="number"
+                            <v-text-field v-model="parameters.weight.pathExit.value"
+                                          hide-details dense outlined single-line type="number"
                                           style="width: 85px">
-
                             </v-text-field>
                           </template>
                         </v-slider>
@@ -169,17 +182,16 @@
                 <v-card rounded="lg" elevation="0">
                   <v-card-title>Saída</v-card-title>
                   <v-divider></v-divider>
-                  <v-skeleton-loader
-                    type="list-item,list-item,list-item,list-item,list-item,list-item"
-                    v-if="loading"></v-skeleton-loader>
-                  <v-card-text v-else>
+                  <v-card-text>
                     <div class="console">
                       <div class="console-top d-flex">
                         <v-spacer></v-spacer>
                         <v-icon @click="clearConsole" color="white" class="mr-2">mdi-delete-sweep
                         </v-icon>
                       </div>
-                      <pre class="ma-0" ref="logger">{{ output }}</pre>
+                      <div class="ma-0 pre-container" v-chat-scroll>
+                        <pre v-for="(line, i) in outputList" :key="i">{{ line }}</pre>
+                      </div>
                     </div>
                   </v-card-text>
                 </v-card>
@@ -188,10 +200,12 @@
           </v-col>
           <v-col cols="12" lg="7">
             <v-card rounded="lg" elevation="0">
-              <v-card-title>Labirinto</v-card-title>
+              <v-card-title>Labirinto
+                <v-img :src="require('@/assets/pudding.png')" @click="walkPath(lastPath)"
+                       class="ml-2" max-height="32px" max-width="48px" contain></v-img>
+              </v-card-title>
               <v-divider></v-divider>
-              <v-skeleton-loader type="table" v-if="loading"></v-skeleton-loader>
-              <v-card-text v-else>
+              <v-card-text>
                 <v-row>
                   <v-col v-if="maze.rawContent" class="d-flex justify-center">
                     <table class="maze">
@@ -204,10 +218,13 @@
                         <td :style="images.background.l"></td>
                         <td v-for="(cell, j) in line" :key="j" :style="images.background.grass">
                           <div v-if="cell.content === '1'" :style="images.walls[(i+j)%4]"></div>
-                          <div v-else-if="cell.wasVisited" :style="images.path"></div>
                           <div v-else-if="cell.content === 'E'"
-                               :style="images.doors.entrance"></div>
-                          <div v-else-if="cell.content === 'S'" :style="images.doors.exit"></div>
+                               :style="images.doors.entrance">
+                          </div>
+                          <div v-else-if="cell.content === 'S'" :style="images.doors.exit">
+                          </div>
+                          <div v-if="cell.wasVisited" :style="images.path">
+                          </div>
                         </td>
                         <td :style="images.background.r"></td>
                       </tr>
@@ -234,22 +251,25 @@
 <script>
 import 'vue-code-highlight/themes/prism-okaidia.css';
 import 'vue-code-highlight/themes/window.css';
-import { findPath } from '@/app';
-import CloneDeep    from 'lodash/cloneDeep';
+import CloneDeep from 'lodash/cloneDeep';
+import Worker    from 'worker-loader!./app';
 
 export default {
   data:    () => ({
+    lastPath:   [],
+    outputList: [],
     fileError:  [],
     loading:    false,
     parameters: {
-      cycles:          { min: 10, max: 1000, step: 10, value: 10 },
-      percentageGood:  { min: 10, max: 80, step: 1, value: 10 },
-      percentageWrong: { min: 10, max: 80, step: 1, value: 10 },
-      tempInitial:     { min: 10, max: 80, step: 1, value: 80 },
-      tempVariation:   { min: 10, max: 80, step: 1, value: 10 },
-      fitnessWeight:   {
-        pathExit:   { min: 1, max: 10, step: 1, value: 2 },
+      cycles:          { min: 1000, max: 10000, step: 1000, value: 5000 },
+      percentageGood:  { min: 10, max: 80, step: 5, value: 30 },
+      percentageWrong: { min: 10, max: 80, step: 5, value: 50 },
+      tempInitial:     { min: 10, max: 80, step: 10, value: 80 },
+      tempVariation:   { min: 10, max: 80, step: 10, value: 20 },
+      weight:          {
+        pathExit:   { min: 1, max: 10, step: 1, value: 3 },
         pathRepeat: { min: 1, max: 10, step: 1, value: 1 },
+        pathWall:   { min: 1, max: 10, step: 1, value: 1 },
       },
     },
     images:     {
@@ -269,6 +289,7 @@ export default {
         exit:     { backgroundImage: `url(${require('@/assets/exit.png')})` },
       },
       path:       { backgroundImage: `url(${require('@/assets/path.png')})` },
+      pudding:    { backgroundImage: `url(${require('@/assets/pudding.png')})` },
       walls:      [
         { backgroundImage: `url(${require('@/assets/w1.png')})` },
         { backgroundImage: `url(${require('@/assets/w2.png')})` },
@@ -287,58 +308,81 @@ export default {
       originalCopy: null,
       size:         null,
     },
-    output:     '',
   }),
   methods: {
-    inp(model) {
-      console.log(model);
-      model.value = 10;
-    },
     walkPath(path) {
-      const currPosition = CloneDeep(this.maze.position.entrance);
+      this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
+      const currPosition    = CloneDeep(this.maze.position.entrance);
 
-      for (const movement of path) {
-        switch (movement) {
-          case 'U':
-            currPosition.line--;
-            break;
-          case 'D':
-            currPosition.line++;
-            break;
-          case 'R':
-            currPosition.col++;
-            break;
-          case 'L':
-            currPosition.col--;
-            break;
-          default:
-            throw new Error('Invalid movement');
-        }
-        if (currPosition.line >= 0 && currPosition.col >= 0
-            && currPosition.line <= this.maze.size - 1 && currPosition.col <= this.maze.size - 1
-            && this.maze.displayMaze[currPosition.line][currPosition.col].content === '0') {
-          this.maze.displayMaze[currPosition.line][currPosition.col].wasVisited = true;
-        }
+      for (let i = 0; i < path.length; i++) {
+        setTimeout(() => {
+          switch (path[i]) {
+            case 'U':
+              currPosition.line--;
+              break;
+            case 'D':
+              currPosition.line++;
+              break;
+            case 'R':
+              currPosition.col++;
+              break;
+            case 'L':
+              currPosition.col--;
+              break;
+            default:
+              throw new Error('Invalid movement');
+          }
+          if (currPosition.line >= 0 && currPosition.col >= 0
+              && currPosition.line <= this.maze.size - 1 && currPosition.col <= this.maze.size - 1
+              && this.maze.displayMaze[currPosition.line][currPosition.col].content === '0') {
+            this.maze.displayMaze[currPosition.line][currPosition.col].wasVisited = true;
+          }
+        }, i * 150);
       }
     },
     clearConsole() {
-      this.output = '';
+      this.outputList = [];
     },
     solveMaze() {
-      let normalizedParameters                 = CloneDeep(this.parameters);
-      normalizedParameters.cycles.value *= normalizedParameters.cycles.max;
-      normalizedParameters.percentageGood.value /= 100;
-      normalizedParameters.percentageWrong.value /= 100;
-      normalizedParameters.tempInitial.value *= 10000;
-      normalizedParameters.tempVariation.value = 1 - (normalizedParameters.tempVariation.value / 1000);
-
       this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
-      const {
-              workingPath, output,
-            }               = findPath(this.maze.displayMaze, this.maze.position, normalizedParameters, this.output);
-      this.output           = output;
-      this.walkPath(workingPath);
-      console.log(workingPath);
+
+      let normalizedParameters = {
+        cycles:          this.parameters.cycles.value,
+        percentageGood:  this.parameters.percentageGood.value / 100,
+        percentageWrong: this.parameters.percentageWrong.value / 100,
+        tempInitial:     this.parameters.tempInitial.value * 1000000,
+        tempVariation:   1 - (this.parameters.tempVariation.value / 10000),
+        weight:          {
+          pathExit:   this.parameters.weight.pathExit.value,
+          pathRepeat: this.parameters.weight.pathRepeat.value,
+          pathWall:   this.parameters.weight.pathWall.value,
+        },
+      };
+
+      const worker     = new Worker();
+      worker.onmessage = (msg) => {
+        let data = msg.data;
+        switch (data.contentType) {
+          case 'console':
+            this.outputList.push(data.content);
+            break;
+          case 'result':
+            this.walkPath(data.content);
+            this.lastPath = data.content;
+            break;
+          case 'status':
+            if (data.content === 'started') {
+              this.loading = true;
+            } else if (data.content === 'finished') {
+              this.loading = false;
+            }
+            break;
+        }
+      };
+      worker.onerror   = console.error;
+      worker.postMessage({
+        maze: this.maze.displayMaze, position: this.maze.position, parameters: normalizedParameters,
+      });
     },
     importTxt() {
       if (!this.maze.file) {
@@ -429,13 +473,13 @@ export default {
     height              : 35px;
     width               : 100%;
 
-    + pre {
+    + .pre-container {
       background-color : #272822;
       color-scheme     : dark;
       border-radius    : 0 0 10px 10px;
       color            : #fff;
       display          : flex;
-      flex-direction   : column-reverse;
+      flex-direction   : column;
       font-family      : Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
       hyphens          : none;
       line-height      : 1.5;
@@ -498,7 +542,7 @@ table.maze {
     width      : 48px;
     text-align : center;
 
-    > div {
+    div {
       height : 100%;
       width  : 100%;
     }

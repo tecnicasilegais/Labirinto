@@ -1,15 +1,13 @@
 import * as getRandomNumber from 'random-number';
-import CloneDeep            from 'lodash/cloneDeep';
 
 const characters = 'UDRL';
 let _maze;
 let _entrance;
 let _exit;
 let _limits;
-let _output;
 
-function alreadyVisited(cell) {
-  return cell.wasVisited === true;
+function alreadyVisited(visitedPositions, currPosition) {
+  return visitedPositions[currPosition.line]?.[currPosition.col] === true;
 }
 
 /**
@@ -54,10 +52,10 @@ function buildNextPath(path, parameters) {
   let firstWrong        = null; //indice do primeiro nodo incorreto no path
   const currPosition    = { line: _entrance.line, col: _entrance.col };
   const walkedPositions = [];
-  let cMaze             = CloneDeep(_maze);
+  let visitedPositions  = {};
 
   for (let i = 0; i < path.length; i++) {
-    walkedPositions.push(cMaze[currPosition.line][currPosition.col]);
+    walkedPositions.push(_maze[currPosition.line][currPosition.col]);
 
     const movement = path[i];
     switch (movement) {
@@ -83,24 +81,24 @@ function buildNextPath(path, parameters) {
       }
       break;
     } else {
-      if (hitsWall(cMaze[currPosition.line][currPosition.col])) {
+      if (hitsWall(_maze[currPosition.line][currPosition.col])) {
         if (!hit) {
           hit        = true;
           firstWrong = i;
         }
       }
-      if (alreadyVisited(cMaze[currPosition.line][currPosition.col])) {
+      if (alreadyVisited(visitedPositions, currPosition)) {
         if (!hit) {
           hit        = true;
           firstWrong = i;
         }
       }
-      cMaze[currPosition.line][currPosition.col].wasVisited = true;
+      (visitedPositions[currPosition.line] ??= {})[currPosition.col] ??= true;
     }
   }
 
-  const prctFixed      = parameters.percentageWrong.value; //porcentagem de vezes que ele resolve o primeiro errado
-  const prctGoodChoice = parameters.percentageGood.value; //porcentagem de vezes que ele escolhe a primeira opção de caminho alteranativo
+  const prctFixed      = parameters.percentageWrong; //porcentagem de vezes que ele resolve o primeiro errado
+  const prctGoodChoice = parameters.percentageGood; //porcentagem de vezes que ele escolhe a primeira opção de caminho alternativo
 
   const moves = ['U', 'R', 'D', 'L'];
   if (!hit) {
@@ -147,8 +145,8 @@ function buildNextPath(path, parameters) {
 }
 
 function calculateFitness(path, weights) {
-  let fitness = 0;
-  let cMaze   = CloneDeep(_maze);
+  let fitness          = 0;
+  let visitedPositions = {};
 
   const currPosition = { line: _entrance.line, col: _entrance.col };
 
@@ -172,15 +170,15 @@ function calculateFitness(path, weights) {
         throw new Error('Invalid movement');
     }
     if (outOfMaze(currPosition)) {
-      fitness += weights.pathExit.value;
+      fitness += weights.pathExit;
     } else {
-      if (hitsWall(cMaze[currPosition.line][currPosition.col])) {
-        fitness++;
+      if (hitsWall(_maze[currPosition.line][currPosition.col])) {
+        fitness += weights.pathWall;
       }
-      if (alreadyVisited(cMaze[currPosition.line][currPosition.col])) {
-        fitness += weights.pathRepeat.value;
+      if (alreadyVisited(visitedPositions, currPosition)) {
+        fitness += weights.pathRepeat;
       }
-      cMaze[currPosition.line][currPosition.col].wasVisited = true;
+      (visitedPositions[currPosition.line] ??= {})[currPosition.col] ??= true;
     }
   }
 
@@ -190,70 +188,99 @@ function calculateFitness(path, weights) {
   return fitness;
 }
 
+onmessage = e => {
+  let data = e.data;
+  console.log('worker got in right place ', data);
+  let result = findPath(data.maze, data.position, data.parameters);
+  sendResult(result);
+};
+
+function sendResult(msg) {
+  postMessage({
+    contentType: 'result',
+    content:     msg,
+  });
+}
+
+function sendStatus(msg) {
+  postMessage({
+    contentType: 'status',
+    content:     msg,
+  });
+}
+
+function writeOutput(str) {
+  postMessage({
+    contentType: 'console',
+    content:     str,
+  });
+}
+
 /**
  * Tries to find a path that solves the maze using the Simulated Annealing method
  * @param maze
- * @param entrance
- * @param exit
+ * @param positions
  * @param parameters
- * @param output
  */
-export function findPath(maze, { entrance, exit }, parameters, output) {
-  _output   = output;
+export function findPath(maze, positions, parameters) {
   _maze     = maze;
-  _entrance = entrance;
-  _exit     = exit;
+  _entrance = positions.entrance;
+  _exit     = positions.exit;
   _limits   = {
     top: 0, bottom: _maze.length - 1, right: _maze[0].length - 1, left: 0,
   };
 
-  _output += `ciclos: ${parameters.cycles.value}, tempInicial: ${parameters.tempInitial.value}, `;
-  _output += `variaçãoTemp: ${parameters.tempVariation.value}, chanceRuim: ${parameters.percentageWrong.value}, `;
-  _output += `chanceBom: ${parameters.percentageGood.value}, pesoSaída: ${parameters.fitnessWeight.pathExit.value}, `;
-  _output += `pesoRepetição: ${parameters.fitnessWeight.pathRepeat.value}\n`;
+  sendStatus('started');
 
-  let temperature   = parameters.tempInitial.value;
-  let tempVariation = parameters.tempVariation.value;
+  let { cycles, percentageGood, percentageWrong, tempInitial, tempVariation, weight } = parameters;
+  //let temperature                                                                     = parameters.tempInitial;
+  //let tempVariation                                                                   = parameters.tempVariation;
 
   let currentPath    = generateString(1);
-  let currentFitness = calculateFitness(currentPath, parameters.fitnessWeight);
+  let currentFitness = calculateFitness(currentPath, weight);
   let nextPath;
   let nextFitness;
 
-  _output += 'Simulated Annealing iniciado\n';
+  writeOutput(`ciclos: ${cycles}, tempInicial: ${tempInitial}, \`variaçãoTemp: ${tempVariation}\n`);
+  writeOutput(`chanceBom: ${percentageGood}, chanceRuim: ${percentageWrong}\n`);
+  writeOutput(`pesoRepetição: ${weight.pathRepeat}, pesoBatida:${weight.pathWall}, pesoSaída: ${weight.pathExit}\n`);
+  writeOutput('Simulated Annealing iniciado\n');
   //Start the cycle until numInteractions is reached
-  for (let i = 0; i <= parameters.cycles.value; i++) {
-    _output += `Ciclo ${i}, \t Temperatura ${temperature}\n`;
-    _output += `Solução atual: ${currentPath}\n`;
+  let cycleOutput;
+  for (let i = 0; i <= cycles; i++) {
+    cycleOutput = `Ciclo ${i}, \t Temperatura ${tempInitial}\n`;
+    cycleOutput += `Solução atual: ${currentPath}\n`;
 
     if (currentFitness === 0) {
       break;
     }
     nextPath    = buildNextPath([...currentPath], parameters);
-    nextFitness = calculateFitness(nextPath, parameters.fitnessWeight);
-    _output += `Solução vizinha: ${nextPath}\n`;
+    nextFitness = calculateFitness(nextPath, weight);
+    cycleOutput += `Solução vizinha: ${nextPath}\n`;
 
     let energy = nextFitness - currentFitness;
     if (energy <= 0) {
       currentPath    = nextPath;
       currentFitness = nextFitness;
     } else {
-      let probability = Math.exp(-energy / temperature);
+      let probability = Math.exp(-energy / tempInitial);
       let random      = getRandomNumber();
       if (random < probability) {
-        _output += 'Aceitou solução pior\n';
+        cycleOutput += 'Aceitou solução pior\n';
         currentPath    = nextPath;
         currentFitness = nextFitness;
       }
     }
-    temperature *= tempVariation;
+    tempInitial *= tempVariation;
+    writeOutput(cycleOutput);
   }
-
   //Conforme temperatura baixa, escolhe menos vezes o pior caminho
 
-  _output += `Final path: ${nextPath}\n`;
-  _output += '\n';
-  return { workingPath: nextPath, output: _output };
+  sendStatus('finished');
+
+  writeOutput(`Solução final: ${nextPath}\n`);
+  writeOutput('\n');
+  return nextPath;
 }
 
 /**
