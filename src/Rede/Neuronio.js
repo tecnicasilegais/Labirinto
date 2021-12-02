@@ -1,25 +1,25 @@
 export default class Neuronio {
 
-    pesos=null;
+    pesos = null;
     defineFuncao;
 
     constructor(pesos) {
         this.setPesos(pesos);
-        this.defineFuncao=0;
+        this.defineFuncao = 0;
     }
 
-    setPesos(pesos){
+    setPesos(pesos) {
         this.pesos = pesos;
     }
 
-    setFuncao(defineFuncao){
+    setFuncao(defineFuncao) {
         this.defineFuncao = defineFuncao;
     }
 
     calculaY(x) {
-        var v = 0;
-        var i;
-        
+        let v = 0;
+        let i;
+
         for (i = 0; i < x.length; i++) {
             v = v + this.pesos[i] * x[i];
         }
@@ -43,10 +43,10 @@ export default class Neuronio {
     }
 
     toString() {
-        var msg = "";
-        var i;
+        let msg = '';
+        let i;
         for (i = 0; i < this.pesos.length; i++) {
-            msg = msg + this.pesos[i] + " ";
+            msg = msg + this.pesos[i] + ' ';
         }
         return msg;
     }
