@@ -109,13 +109,13 @@
                       <tr v-for="(line, i) in maze.displayMaze" :key="i">
                         <td :style="images.background.l"></td>
                         <td v-for="(cell, j) in line" :key="j" :style="images.background.grass">
-                          <div v-if="cell.content === '1'" :style="images.walls[(i+j)%4]"></div>
-                          <div v-else-if="cell.content === 'E'"
+                          <div v-if="cell.content === 1" :style="images.walls[(i+j)%4]"></div>
+<!--                          <div v-else-if="cell.content === 'E'"
                                :style="images.doors.entrance">
                           </div>
                           <div v-else-if="cell.content === 'S'" :style="images.doors.exit">
-                          </div>
-                          <div v-else-if="cell.content === 'M'" :style="images.coins">
+                          </div>-->
+                          <div v-else-if="cell.content === 2" :style="images.coins">
                           </div>
                           <div v-if="cell.wasVisited" :style="images.path">
                           </div>
@@ -156,8 +156,8 @@ export default {
     fileError:  [],
     loading:    false,
     parameters: {
-      cycles:             { min: 1000, max: 10000, step: 1000, value: 5000 },
-      percentageMutation: { min: 10, max: 80, step: 5, value: 50 },
+      cycles:             { min: 1, max: 100, step: 1, value: 1 },
+      percentageMutation: { min: 10, max: 80, step: 5, value: 20 },
     },
     images:     {
       background: {
@@ -199,39 +199,38 @@ export default {
   }),
   methods: {
     walkPath(path) {
+      //TODO AJUSTA ISSO
       this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
       const currPosition    = CloneDeep(this.maze.position.entrance);
 
       for (let i = 0; i < path.length; i++) {
-        setTimeout(() => {
-          switch (path[i]) {
-            case 'U':
-              currPosition.line--;
-              break;
-            case 'D':
-              currPosition.line++;
-              break;
-            case 'R':
-              currPosition.col++;
-              break;
-            case 'L':
-              currPosition.col--;
-              break;
-            default:
-              throw new Error('Invalid movement');
-          }
-          if (currPosition.line >= 0 && currPosition.col >= 0
-              && currPosition.line <= this.maze.size - 1 && currPosition.col <= this.maze.size - 1
-              && this.maze.displayMaze[currPosition.line][currPosition.col].content === '0') {
-            this.maze.displayMaze[currPosition.line][currPosition.col].wasVisited = true;
-          }
-        }, i * 150);
+        switch (path[i]) {
+          case 0://up
+            currPosition.line -= 1;
+            break;
+          case 1://down
+            currPosition.line += 1;
+            break;
+          case 2://left
+            currPosition.col -= 1;
+            break;
+          case 3://right
+            currPosition.col += 1;
+            break;
+          default:
+            throw new Error('Invalid movement');
+        }
+        if (currPosition.line >= 0 && currPosition.col >= 0
+            && currPosition.line <= this.maze.size - 1 && currPosition.col <= this.maze.size - 1
+            && this.maze.displayMaze[currPosition.line][currPosition.col].content === '0') {
+          this.maze.displayMaze[currPosition.line][currPosition.col].wasVisited = true;
+        }
       }
     },
     clearConsole() {
       this.outputList = [];
     },
-    solveMaze() {
+    solveMaze: function () {
       this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
 
       let normalizedParameters = {
@@ -247,18 +246,25 @@ export default {
             this.outputList.push(data.content);
             break;
           case 'result':
-            this.walkPath(data.content);
+            //this.walkPath(data.content);
             this.lastPath = data.content;
             break;
           case 'status':
-            if (data.statusType === 'coins') {
-              this.coins = data.content;
-            } else if (data.statusType === 'execution') {
-              if (data.content === 'started') {
-                this.loading = true;
-              } else if (data.content === 'finished') {
-                this.loading = false;
-              }
+            switch (data.statusType) {
+              case 'coins':
+                this.coins = data.content;
+                break;
+              case 'update':
+                console.log(data.content);
+                //this.walkPath(data.content);
+                break;
+              case 'execution':
+                if (data.content === 'started') {
+                  this.loading = true;
+                } else if (data.content === 'finished') {
+                  this.loading = false;
+                }
+                break;
             }
             break;
         }
@@ -298,37 +304,24 @@ export default {
         for (let i = 0; i < this.maze.size; i++) {
           for (let j = 0; j < this.maze.size; j++) {
             const cell       = splitLines[i][j];
-            splitLines[i][j] = { wasVisited: false, content: cell, possiblePaths: [] };
+            splitLines[i][j] = { wasVisited: false, content: cell };
             switch (splitLines[i][j].content) {
               case 'E': {
+                splitLines[i][j].content = 0;
                 this.maze.position.entrance = { line: i, col: j };
                 break;
               }
               case 'S': {
+                splitLines[i][j].content = 0;
                 this.maze.position.exit = { line: i, col: j };
                 break;
               }
               case 'M': {
-                this.maze.position.exit = { line: i, col: j };
+                splitLines[i][j].content = 2;
                 break;
               }
-              case 'P': {
-                this.fileError = ['Labirinto já caminhado, remover os \'P\''];
-                return;
-              }
-            }
-            if (splitLines[i][j].content !== '1') {//Se célula não é parede (engloba entradas e saídas)
-              if (i > 0 && splitLines[i - 1][j] !== '1') {//Se não é a primeira linha e a célula acima não é parede
-                splitLines[i][j].possiblePaths.push('U');
-              }
-              if (i < this.maze.size - 1 && splitLines[i + 1][j] !== '1') {//Se não é a última linha e a linha de baixo não é parede
-                splitLines[i][j].possiblePaths.push('D');
-              }
-              if (j > 0 && splitLines[i][j - 1] !== '1') {//Se não é a primeira coluna e a célula da esquerda não é parede
-                splitLines[i][j].possiblePaths.push('L');
-              }
-              if (j < this.maze.size - 1 && splitLines[i][j + 1] !== '1') {//Se não é a última coluna e a célula da direita não é parede
-                splitLines[i][j].possiblePaths.push('R');
+              default: {
+                splitLines[i][j].content = parseInt(cell, 10);
               }
             }
           }

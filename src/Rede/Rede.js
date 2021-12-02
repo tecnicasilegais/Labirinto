@@ -8,11 +8,11 @@ export default class Rede {
 
     constructor(numNeuroniosOculta, numNeuroniosSaida) {
         if (numNeuroniosOculta <= 0 || numNeuroniosSaida <= 0) {
-            numNeuroniosOculta = 5;
+            numNeuroniosOculta = 4;
             numNeuroniosSaida  = 4;
         }
-        this.camadaOculta = new Neuronio(numNeuroniosOculta);
-        this.camadaSaida  = new Neuronio(numNeuroniosSaida);
+        this.camadaOculta = Array(numNeuroniosOculta);
+        this.camadaSaida  = Array(numNeuroniosSaida);
     }
 
     setModelWeights(numEntradas, pesos) {

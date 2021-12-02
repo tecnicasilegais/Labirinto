@@ -5,7 +5,8 @@ let _maze;
 let _entrance;
 let _exit;
 let _limits;
-let _path;
+let _path         = [];
+let _currBestPath = [];
 let _coins;
 
 function alreadyVisited(currPosition) {
@@ -18,7 +19,7 @@ function alreadyVisited(currPosition) {
  * @returns {boolean} - boolean indicating if a wall was hit
  */
 function hitsWall(position) {
-    return _maze[position.line][position.col] === '1';
+    return _maze[position.line][position.col].content === 1;
 }
 
 /**
@@ -131,7 +132,7 @@ function buildNextPopulation(population, fitness, percentageMutation) {
 
     //now the mutation
 
-    if (percentageMutation <= Math.random()) {
+    if (percentageMutation >= Math.random()) {
         let chromosome                   = getRandomInteger(nextPopulation.length);
         let gene                         = getRandomInteger(nextPopulation[0].length);
         nextPopulation[chromosome][gene] = (Math.random() * 2) - 1;
@@ -150,19 +151,19 @@ function getSides(position) {
     let sides = [];
     //add up position
     if (position.line - 1 < _limits.top) sides.push(1);
-    else sides.push(_maze[position.line - 1][position.col]);
+    else sides.push(_maze[position.line - 1][position.col].content);
 
     //add down position
-    if (position.line + 1 < _limits.bottom) sides.push(1);
-    else sides.push(_maze[position.line + 1][position.col]);
+    if (position.line + 1 > _limits.bottom) sides.push(1);
+    else sides.push(_maze[position.line + 1][position.col].content);
 
     //add left position
     if (position.col - 1 < _limits.left) sides.push(1);
-    else sides.push(_maze[position.line][position.col - 1]);
+    else sides.push(_maze[position.line][position.col - 1].content);
 
     //add up position
     if (position.col + 1 > _limits.right) sides.push(1);
-    else sides.push(_maze[position.line][position.col + 1]);
+    else sides.push(_maze[position.line][position.col + 1].content);
 
     sides.push(nOfMovementsToExit(position));
 
@@ -172,13 +173,13 @@ function getSides(position) {
 function calculateFitness(population) {
 
     let fitnessArray = [];
-    let model        = new Rede(5, 4);
-    let cMaze        = CloneDeep(_maze);
-    //TODO: how to deal with path in front-end maze?
-    //"push position"(best) or movements?
-    let path = []; // or  = '';
+    let model        = new Rede(4, 4);
 
-    for (const chromossome in population) {
+    for (const chromossome of population) {
+        writeOutput(`chromossomes ${chromossome.join(',')}`)
+        let path  = [];
+        let cMaze = CloneDeep(_maze);
+        resetCoins();
         let currentFitness = 0;
         const currPosition = { line: _entrance.line, col: _entrance.col };
         //here we need to set up the model with the population weights
@@ -189,8 +190,9 @@ function calculateFitness(population) {
             let entrance = getSides(currPosition);
             //send to the model and get the biggest move
             let out      = model.propagation(entrance);
-            let biggest  = out[0];
-            let pos      = 0;
+            writeOutput(out.join(','));
+            let biggest = out[0];
+            let pos     = 0;
             for (let i = 1; i < out.length; i++) {
                 const element = out[i];
                 if (biggest < element) {
@@ -198,7 +200,6 @@ function calculateFitness(population) {
                     pos     = i;
                 }
             }
-
             switch (pos) {
                 case 0://up
                     currPosition.line -= 1;
@@ -217,40 +218,37 @@ function calculateFitness(population) {
             //TODO: current position equal to the exit position
             //finish the execution sending
             if (currPosition.line == _exit.line && currPosition.col == _exit.col) {
-                path.push(currPosition);
+                path.push(CloneDeep(currPosition));
                 _path  = path;
                 finish = true;
-            } else if (outOfMaze(currPosition) || alreadyVisited(currPosition) || hitsWall(currPosition)) {
+            } else if (outOfMaze(currPosition)) {
+                break;
+            } else if (alreadyVisited(currPosition)) {
+                break;
+            } else if (hitsWall(currPosition)) {
                 break;
             } else {
-                path.push(currPosition);
-                cMaze[currPosition.line][position.col].wasVisited = true;
-                currentFitness += 1;
+                path.push(CloneDeep(currPosition));
+                cMaze[currPosition.line][currPosition.col].wasVisited = true;
+                currentFitness += 1-nOfMovementsToExit(currPosition);
                 //TODO: check if there is a coin and sum a value. What is the best value? 10?
-                //if(cMaze[currPosition.line][position.col] == "    COIN??????    ") currentFitness += 10;
+                if (cMaze[currPosition.line][currPosition.col].content === 2) {
+                    currentFitness += 1;
+                    addCoins(50);
+                }
             }
+            _currBestPath = path;
         }
         fitnessArray.push(currentFitness);
         if (finish) break;
     }
+    writeOutput(`fitArray ${fitnessArray.join(',')}`)
     return fitnessArray;
 }
 
 export function findPath(maze, positions, parameters) {
-    // ====== JUST TO STOP ERRORS TEMPORARILY ======
-    alreadyVisited();
-    hitsWall();
-    outOfMaze();
-    nOfMovementsToExit();
-    populationInitialization();
-    buildNextPopulation();
-    addCoins(50);
-    console.log(_entrance);
-    // ====== JUST TO STOP ERRORS TEMPORARILY ======
     //TODO: what is the dict of the maze,
     //walls and out is 1? coins is ''? free space is 0?
-
-
     _maze     = maze;
     _entrance = positions.entrance;
     _exit     = positions.exit;
@@ -274,15 +272,17 @@ export function findPath(maze, positions, parameters) {
         population = buildNextPopulation(population, fitness, percentageMutation);
         fitness    = calculateFitness(population);
         //TODO: "array of position"(best) or string of movements
-        if (_path !== '') {
+        if (_path.length > 0) {
+            _currBestPath = _path;
             break;
         }
+        sendUpdate(_currBestPath);
     }
     sendStatus('finished');
 
-    writeOutput(`Final path: ${_path}\n`);
+    writeOutput(`Final path: ${_currBestPath.join(',')}\n`);
     writeOutput('\n');
-    return _path;
+    return _currBestPath;
 }
 
 onmessage = e => {
@@ -298,6 +298,23 @@ function addCoins(nCoins) {
         contentType: 'status',
         statusType:  'coins',
         content:     _coins,
+    });
+}
+
+function resetCoins() {
+    _coins = 0;
+    postMessage({
+        contentType: 'status',
+        statusType:  'coins',
+        content:     0,
+    });
+}
+
+function sendUpdate(msg) {
+    postMessage({
+        contentType: 'status',
+        statusType:  'update',
+        content:     msg,
     });
 }
 
