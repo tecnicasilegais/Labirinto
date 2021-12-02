@@ -65,6 +65,13 @@ function populationInitialization() {
   return population;
 }
 
+/**
+ * Create the next population with the current population and fitness
+ * @param population - current population
+ * @param fitness - current fitness
+ * @param percentageMutation - percentage of mutation
+ * @returns New population
+ */
 function buildNextPopulation(population, fitness, percentageMutation) {
   const nextPopulation = [];
   //get the biggest fitness position

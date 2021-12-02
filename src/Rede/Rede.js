@@ -8,7 +8,7 @@ export default class Rede {
 
     constructor(numNeuroniosOculta, numNeuroniosSaida) {
         if (numNeuroniosOculta <= 0 || numNeuroniosSaida <= 0) {
-            numNeuroniosOculta = 8;
+            numNeuroniosOculta = 5;
             numNeuroniosSaida = 4;
         }
         this.camadaOculta = new Neuronio(numNeuroniosOculta);
@@ -20,16 +20,16 @@ export default class Rede {
         var tmp = [];
 
         for (var i = 0; i < this.camadaOculta.length; i++) {
-            tmp = (numEntradas + 1);
+            tmp = Array(numEntradas + 1);
             for (var j = 0; j < numEntradas + 1; j++) {
                 tmp[j] = pesos[k];
                 k++;
             }
-            this.camadaOculta[i]=new Neuronio(tmp);
+            this.camadaOculta[i] = new Neuronio(tmp);
         }
 
         for (var i = 0; i < this.camadaSaida.length; i++) {
-            tmp = (this.camadaOculta.length+1);
+            tmp = Array(this.camadaOculta.length+1);
             for (var j = 0; j < this.camadaOculta.length + 1; j++) {
                 tmp[j] = pesos[k];
                 k++;
@@ -41,13 +41,13 @@ export default class Rede {
     propagacao(x) {
         if (x == null) return null;
 
-        this.saidaOculta = this.camadaOculta.length;
-        this.saida = this.camadaSaida.length;
+        var saidaOculta = Array(this.camadaOculta.length);
+        this.saida = Array(this.camadaSaida.length);
         for (var i = 0; i < this.camadaOculta.length; i++) {
-            this.saidaOculta[i] = this.camadaOculta[i].calculaY(x);
+            saidaOculta[i] = this.camadaOculta[i].calculaY(x);
         }
         for (var i = 0; i < this.camadaSaida.length; i++) {
-            this.saida[i] = this.camadaSaida[i].calculaY(this.saidaOculta);
+            this.saida[i] = this.camadaSaida[i].calculaY(saidaOculta);
         }
         return this.saida;
     }

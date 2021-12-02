@@ -19,11 +19,11 @@ export default class Neuronio {
     calculaY(x) {
         var v = 0;
         var i;
-
+        
         for (i = 0; i < x.length; i++) {
             v = v + this.pesos[i] * x[i];
         }
-        v = v + this.pesos[i];
+        v = v + this.pesos[i]; //bias
 
         switch (this.defineFuncao) {
             case 1:
