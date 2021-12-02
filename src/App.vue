@@ -45,126 +45,18 @@
                     </v-row>
                     <v-row dense>
                       <v-col class="pr-5">
-                        <label for="temperature_initial" class="pl-0">Temperatura inicial</label>
-                        <v-slider v-model="parameters.tempInitial.value" dense thumb-label
+                        <label for="percentage_mutation" class="pl-0">Chance de mutação</label>
+                        <v-slider v-model="parameters.percentageMutation.value" dense thumb-label
                                   hide-details
-                                  id="temperature_initial"
-                                  :max="parameters.tempInitial.max"
-                                  :min="parameters.tempInitial.min"
-                                  :step="parameters.tempInitial.step">
+                                  id="percentage_mutation"
+                                  :max="parameters.percentageMutation.max"
+                                  :min="parameters.percentageMutation.min"
+                                  :step="parameters.percentageMutation.step">
                           <template v-slot:prepend>
-                            <v-text-field v-model="parameters.tempInitial.value" hide-details dense
-                                          outlined single-line type="number" style="width: 85px">
-                            </v-text-field>
-                          </template>
-                        </v-slider>
-                      </v-col>
-                      <v-col>
-                        <label for="temperature_variation" class="pl-0">Variação da
-                          temperatura</label>
-                        <v-slider v-model="parameters.tempVariation.value" dense thumb-label
-                                  hide-details
-                                  id="temperature_variation"
-                                  :max="parameters.tempVariation.max"
-                                  :min="parameters.tempVariation.min"
-                                  :step="parameters.tempVariation.step">
-                          <template v-slot:prepend>
-                            <v-text-field v-model="parameters.tempVariation.value" hide-details
+                            <v-text-field v-model="parameters.percentageMutation.value" hide-details
                                           dense
                                           outlined single-line type="number" style="width: 85px"
                                           suffix="%">
-
-                            </v-text-field>
-                          </template>
-                        </v-slider>
-                      </v-col>
-                    </v-row>
-                    <v-row dense>
-                      <v-col class="pr-5">
-                        <label for="percentage_wrong" class="pl-0">Chance de arrumar o primeiro
-                          ruim</label>
-                        <v-slider v-model="parameters.percentageWrong.value" dense thumb-label
-                                  hide-details id="percentage_wrong"
-                                  :max="parameters.percentageWrong.max"
-                                  :min="parameters.percentageWrong.min"
-                                  :step="parameters.percentageWrong.step">
-                          <template v-slot:prepend>
-                            <v-text-field v-model="parameters.percentageWrong.value" hide-details
-                                          dense
-                                          outlined single-line type="number" style="width: 85px"
-                                          suffix="%">
-                            </v-text-field>
-                          </template>
-                        </v-slider>
-                      </v-col>
-                      <v-col>
-                        <label for="percentage_good" class="pl-0">Chance de escolher possibilidade
-                          válida</label>
-                        <v-slider v-model="parameters.percentageGood.value" dense thumb-label
-                                  hide-details
-                                  id="percentage_good"
-                                  :max="parameters.percentageGood.max"
-                                  :min="parameters.percentageGood.min"
-                                  :step="parameters.percentageGood.step">
-                          <template v-slot:prepend>
-                            <v-text-field v-model="parameters.percentageGood.value" hide-details
-                                          dense
-                                          outlined single-line type="number" style="width: 85px"
-                                          suffix="%">
-
-                            </v-text-field>
-                          </template>
-                        </v-slider>
-                      </v-col>
-                    </v-row>
-                    <v-row dense>
-                      <v-col class="pr-5">
-                        <label for="path_weight_repeat" class="pl-0">Peso de repetir o
-                          caminho</label>
-                        <v-slider v-model="parameters.weight.pathRepeat.value" dense
-                                  thumb-label
-                                  hide-details id="path_weight_repeat"
-                                  :max="parameters.weight.pathRepeat.max"
-                                  :min="parameters.weight.pathRepeat.min"
-                                  :step="parameters.weight.pathRepeat.step">
-                          <template v-slot:prepend>
-                            <v-text-field v-model="parameters.weight.pathRepeat.value"
-                                          hide-details dense outlined single-line type="number"
-                                          style="width: 85px">
-
-                            </v-text-field>
-                          </template>
-                        </v-slider>
-                      </v-col>
-                      <v-col class="pr-5">
-                        <label for="path_weight_wall" class="pl-0">Peso de bater na parede</label>
-                        <v-slider v-model="parameters.weight.pathWall.value" dense
-                                  thumb-label
-                                  hide-details id="path_weight_repeat"
-                                  :max="parameters.weight.pathWall.max"
-                                  :min="parameters.weight.pathWall.min"
-                                  :step="parameters.weight.pathWall.step">
-                          <template v-slot:prepend>
-                            <v-text-field v-model="parameters.weight.pathWall.value"
-                                          hide-details dense outlined single-line type="number"
-                                          style="width: 85px">
-
-                            </v-text-field>
-                          </template>
-                        </v-slider>
-                      </v-col>
-                      <v-col>
-                        <label for="path_weight_exit" class="pl-0">Peso de sair do labirinto</label>
-                        <v-slider v-model="parameters.weight.pathExit.value" dense
-                                  thumb-label
-                                  hide-details id="path_weight_exit"
-                                  :max="parameters.weight.pathExit.max"
-                                  :min="parameters.weight.pathExit.min"
-                                  :step="parameters.weight.pathExit.step">
-                          <template v-slot:prepend>
-                            <v-text-field v-model="parameters.weight.pathExit.value"
-                                          hide-details dense outlined single-line type="number"
-                                          style="width: 85px">
                             </v-text-field>
                           </template>
                         </v-slider>
@@ -223,6 +115,8 @@
                           </div>
                           <div v-else-if="cell.content === 'S'" :style="images.doors.exit">
                           </div>
+                          <div v-else-if="cell.content === 'M'" :style="images.coins">
+                          </div>
                           <div v-if="cell.wasVisited" :style="images.path">
                           </div>
                         </td>
@@ -256,6 +150,7 @@ import Worker    from 'worker-loader!./app';
 
 export default {
   data:    () => ({
+    coins:      0,
     lastPath:   [],
     outputList: [],
     fileError:  [],
@@ -276,6 +171,7 @@ export default {
         b:     { backgroundImage: `url(${require('@/assets/b.png')})` },
         br:    { backgroundImage: `url(${require('@/assets/br.png')})` },
       },
+      coins:      { backgroundImage: `url(${require('@/assets/coins.png')})` },
       doors:      {
         entrance: { backgroundImage: `url(${require('@/assets/entrance.png')})` },
         exit:     { backgroundImage: `url(${require('@/assets/exit.png')})` },
@@ -339,16 +235,8 @@ export default {
       this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
 
       let normalizedParameters = {
-        cycles:          this.parameters.cycles.value,
-        percentageGood:  this.parameters.percentageGood.value / 100,
-        percentageWrong: this.parameters.percentageWrong.value / 100,
-        tempInitial:     this.parameters.tempInitial.value * 1000000,
-        tempVariation:   1 - (this.parameters.tempVariation.value / 10000),
-        weight:          {
-          pathExit:   this.parameters.weight.pathExit.value,
-          pathRepeat: this.parameters.weight.pathRepeat.value,
-          pathWall:   this.parameters.weight.pathWall.value,
-        },
+        cycles:             this.parameters.cycles.value,
+        percentageMutation: this.parameters.percentageMutation.value / 100,
       };
 
       const worker     = new Worker();
@@ -363,10 +251,14 @@ export default {
             this.lastPath = data.content;
             break;
           case 'status':
-            if (data.content === 'started') {
-              this.loading = true;
-            } else if (data.content === 'finished') {
-              this.loading = false;
+            if (data.statusType === 'coins') {
+              this.coins = data.content;
+            } else if (data.statusType === 'execution') {
+              if (data.content === 'started') {
+                this.loading = true;
+              } else if (data.content === 'finished') {
+                this.loading = false;
+              }
             }
             break;
         }
@@ -413,6 +305,10 @@ export default {
                 break;
               }
               case 'S': {
+                this.maze.position.exit = { line: i, col: j };
+                break;
+              }
+              case 'M': {
                 this.maze.position.exit = { line: i, col: j };
                 break;
               }

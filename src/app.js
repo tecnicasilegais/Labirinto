@@ -1,9 +1,9 @@
-const characters = 'UDRL';
 let _maze;
 let _entrance;
 let _exit;
 let _limits;
 let _path;
+let _coins;
 
 function alreadyVisited(visitedPositions, currPosition) {
   return visitedPositions[currPosition.line]?.[currPosition.col] === true;
@@ -146,6 +146,7 @@ export function findPath(maze, positions, parameters) {
   nOfMovementsToExit();
   populationInitialization();
   buildNextPopulation();
+  addCoins(50);
   console.log(_entrance);
   // ====== JUST TO STOP ERRORS TEMPORARILY ======
 
@@ -155,6 +156,7 @@ export function findPath(maze, positions, parameters) {
   _limits   = {
     top: 0, bottom: _maze.length - 1, right: _maze[0].length - 1, left: 0,
   };
+  _coins    = 0;
   _path     = '';
 
   sendStatus('started');
@@ -189,6 +191,15 @@ onmessage = e => {
   sendResult(result);
 };
 
+function addCoins(nCoins) {
+  _coins += nCoins;
+  postMessage({
+    contentType: 'status',
+    statusType:  'coins',
+    content:     _coins,
+  });
+}
+
 function sendResult(msg) {
   postMessage({
     contentType: 'result',
@@ -199,6 +210,7 @@ function sendResult(msg) {
 function sendStatus(msg) {
   postMessage({
     contentType: 'status',
+    statusType:  'execution',
     content:     msg,
   });
 }
