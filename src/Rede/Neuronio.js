@@ -27,10 +27,9 @@ export default class Neuronio {
 
         switch (this.defineFuncao) {
             case 1:
-                this.tangenteHiperbolica(v);
-                break;
+                return this.tangenteHiperbolica(v);
             default:
-                this.logistica(v);
+                return this.logistica(v);
         }
     }
 

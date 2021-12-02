@@ -15,7 +15,7 @@ export default class Rede {
         this.camadaSaida = new Neuronio(numNeuroniosSaida);
     }
 
-    setPesosNaRede(numEntradas, pesos) {
+    setModelWeights(numEntradas, pesos) {
         var k = 0;
         var tmp = [];
 
@@ -38,7 +38,7 @@ export default class Rede {
         }
     }
 
-    propagacao(x) {
+    propagation(x) {
         if (x == null) return null;
 
         var saidaOculta = Array(this.camadaOculta.length);

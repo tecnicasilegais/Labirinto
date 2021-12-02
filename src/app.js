@@ -1,3 +1,6 @@
+import Rede       from "./Rede/Rede";
+import CloneDeep  from 'lodash/cloneDeep';
+
 let _maze;
 let _entrance;
 let _exit;
@@ -5,17 +8,17 @@ let _limits;
 let _path;
 let _coins;
 
-function alreadyVisited(visitedPositions, currPosition) {
-  return visitedPositions[currPosition.line]?.[currPosition.col] === true;
+function alreadyVisited(currPosition) {
+  return _maze[currPosition.line][currPosition.col].wasVisited === true;
 }
 
 /**
- * Checks if moving to the next cell hits a wall
- * @param nextCell - cell to check contents
+ * Checks if current position hitted a wall
+ * @param position - position to check contents
  * @returns {boolean} - boolean indicating if a wall was hit
  */
-function hitsWall(nextCell) {
-  return nextCell.content === '1';
+function hitsWall(position) {
+  return _maze[position.line][position.col] === '1';
 }
 
 /**
@@ -75,11 +78,12 @@ function populationInitialization() {
 function buildNextPopulation(population, fitness, percentageMutation) {
   const nextPopulation = [];
   //get the biggest fitness position
-  let biggest          = 0;
-  let pos              = 0;
+  let biggest = 0;
+  let pos     = 0;
   for (let i = 0; i < fitness.length; i++) {
     const element = fitness[i];
     if (element > biggest) {
+      biggest = element;
       pos = i;
     }
   }
@@ -137,12 +141,100 @@ function buildNextPopulation(population, fitness, percentageMutation) {
 
 }
 
+/**
+ * Get sides of the current position in the maze
+ * @param position - Current position
+ * @returns Sides of the current position and the number of moves to exit
+ */
+function getSides(position) {
+  let sides = [];
+  //add up position
+  if(position.line - 1 < _limits.top) sides.push(1);
+  else sides.push(_maze[position.line - 1][position.col]);
+  
+  //add down position
+  if(position.line + 1 < _limits.bottom) sides.push(1);
+  else sides.push(_maze[position.line + 1][position.col]);
+
+  //add left position
+  if(position.col - 1 < _limits.left) sides.push(1);
+  else sides.push(_maze[position.line][position.col - 1]);
+
+  //add up position
+  if(position.col + 1 > _limits.right) sides.push(1);
+  else sides.push(_maze[position.line][position.col + 1]);
+
+  sides.push(nOfMovementsToExit(position))
+
+  return sides;
+}
+
 function calculateFitness(population) {
-  console.log(population);
-  //here we need to set up the model with the population weights
-  //the neural network is supposed to give us a score with the current path
-  //if the neural network find the path, set _path to finish the execution
-  //need to return a list with each chromossome fitness, so that we can build the next population
+
+  let fitnessArray = [];
+  let model = new Rede(5, 4);
+  let cMaze = CloneDeep(_maze);
+  //TODO: how to deal with path in front-end maze?
+        //"push position"(best) or movements?
+  let path = []; // or  = '';
+
+  for (const chromossome in population) {
+    let currentFitness = 0;
+    const currPosition = { line: _entrance.line, col: _entrance.col }; 
+    //here we need to set up the model with the population weights
+    model.setModelWeights(5, chromossome);
+    let finish = false;
+    while (!finish) {
+      //get the sides positions
+      let entrance = getSides(currPosition);
+      //send to the model and get the biggest move
+      let out = model.propagation(entrance);
+      let biggest = out[0];
+      let pos = 0;
+      for (let i = 1; i < out.length; i++) {
+        const element = out[i];
+        if (biggest < element) {
+          biggest = element;
+          pos = i;
+        }
+      }
+
+      switch (pos) {
+        case 0://up
+          currPosition.line -= 1;
+          break;
+        case 1://down
+          currPosition.line += 1;
+          break;
+        case 2://left
+          currPosition.col -= 1;
+          break;
+        case 3://right
+          currPosition.col += 1;
+          break;
+      }
+      
+      //TODO: current position equal to the exit position
+            //finish the execution sending 
+      if(currPosition.line == _exit.line && currPosition.col == _exit.col){
+        path.push(currPosition);
+        _path = path;
+        finish = true;
+      } else if(outOfMaze(currPosition) || alreadyVisited(currPosition) || hitsWall(currPosition))
+      {
+        break;
+      } else {
+        path.push(currPosition);
+        cMaze[currPosition.line][position.col].wasVisited = true;
+        currentFitness += 1;
+        //TODO: check if there is a coin and sum a value. What is the best value? 10?
+        //if(cMaze[currPosition.line][position.col] == "    COIN??????    ") currentFitness += 10;
+      }
+    }
+    fitnessArray.push(currentFitness);
+    if(finish) break;
+  }
+  return fitnessArray;
 }
 
 export function findPath(maze, positions, parameters) {
@@ -156,6 +248,9 @@ export function findPath(maze, positions, parameters) {
   addCoins(50);
   console.log(_entrance);
   // ====== JUST TO STOP ERRORS TEMPORARILY ======
+  //TODO: what is the dict of the maze, 
+        //walls and out is 1? coins is ''? free space is 0?
+
 
   _maze     = maze;
   _entrance = positions.entrance;
@@ -179,7 +274,7 @@ export function findPath(maze, positions, parameters) {
 
     population = buildNextPopulation(population, fitness, percentageMutation);
     fitness    = calculateFitness(population);
-
+    //TODO: "array of position"(best) or string of movements
     if (_path !== '') {
       break;
     }
