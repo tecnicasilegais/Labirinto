@@ -176,7 +176,6 @@ function calculateFitness(population) {
     let model        = new Rede(4, 4);
 
     for (const chromossome of population) {
-        writeOutput(`chromossomes ${chromossome.join(',')}`)
         let path  = [];
         let cMaze = CloneDeep(_maze);
         resetCoins();
@@ -190,9 +189,8 @@ function calculateFitness(population) {
             let entrance = getSides(currPosition);
             //send to the model and get the biggest move
             let out      = model.propagation(entrance);
-            writeOutput(out.join(','));
-            let biggest = out[0];
-            let pos     = 0;
+            let biggest  = out[0];
+            let pos      = 0;
             for (let i = 1; i < out.length; i++) {
                 const element = out[i];
                 if (biggest < element) {
@@ -222,18 +220,21 @@ function calculateFitness(population) {
                 _path  = path;
                 finish = true;
             } else if (outOfMaze(currPosition)) {
+                currentFitness -= 8;
                 break;
             } else if (alreadyVisited(currPosition)) {
+                currentFitness -= 3;
                 break;
             } else if (hitsWall(currPosition)) {
+                currentFitness -= 3;
                 break;
             } else {
                 path.push(CloneDeep(currPosition));
                 cMaze[currPosition.line][currPosition.col].wasVisited = true;
-                currentFitness += 1-nOfMovementsToExit(currPosition);
+                currentFitness += 5 ;
                 //TODO: check if there is a coin and sum a value. What is the best value? 10?
                 if (cMaze[currPosition.line][currPosition.col].content === 2) {
-                    currentFitness += 1;
+                    currentFitness += 8;
                     addCoins(50);
                 }
             }
@@ -242,7 +243,7 @@ function calculateFitness(population) {
         fitnessArray.push(currentFitness);
         if (finish) break;
     }
-    writeOutput(`fitArray ${fitnessArray.join(',')}`)
+    writeOutput(`fitArray ${fitnessArray.join(',')}`);
     return fitnessArray;
 }
 
@@ -268,7 +269,7 @@ export function findPath(maze, positions, parameters) {
     //Start the cycle until numInteractions is reached
     for (let i = 0; i <= cycles; i++) {
         writeOutput(`Ciclo ${i}`);
-
+        writeOutput(`fitness ${fitness}`);
         population = buildNextPopulation(population, fitness, percentageMutation);
         fitness    = calculateFitness(population);
         //TODO: "array of position"(best) or string of movements

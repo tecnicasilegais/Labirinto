@@ -110,11 +110,11 @@
                         <td :style="images.background.l"></td>
                         <td v-for="(cell, j) in line" :key="j" :style="images.background.grass">
                           <div v-if="cell.content === 1" :style="images.walls[(i+j)%4]"></div>
-<!--                          <div v-else-if="cell.content === 'E'"
-                               :style="images.doors.entrance">
-                          </div>
-                          <div v-else-if="cell.content === 'S'" :style="images.doors.exit">
-                          </div>-->
+                          <!--                          <div v-else-if="cell.content === 'E'"
+                                                         :style="images.doors.entrance">
+                                                    </div>
+                                                    <div v-else-if="cell.content === 'S'" :style="images.doors.exit">
+                                                    </div>-->
                           <div v-else-if="cell.content === 2" :style="images.coins">
                           </div>
                           <div v-if="cell.wasVisited" :style="images.path">
@@ -156,7 +156,7 @@ export default {
     fileError:  [],
     loading:    false,
     parameters: {
-      cycles:             { min: 1, max: 100, step: 1, value: 1 },
+      cycles:             { min: 1, max: 10000, step: 1, value: 1 },
       percentageMutation: { min: 10, max: 80, step: 5, value: 20 },
     },
     images:     {
@@ -201,30 +201,9 @@ export default {
     walkPath(path) {
       //TODO AJUSTA ISSO
       this.maze.displayMaze = CloneDeep(this.maze.originalCopy);
-      const currPosition    = CloneDeep(this.maze.position.entrance);
 
       for (let i = 0; i < path.length; i++) {
-        switch (path[i]) {
-          case 0://up
-            currPosition.line -= 1;
-            break;
-          case 1://down
-            currPosition.line += 1;
-            break;
-          case 2://left
-            currPosition.col -= 1;
-            break;
-          case 3://right
-            currPosition.col += 1;
-            break;
-          default:
-            throw new Error('Invalid movement');
-        }
-        if (currPosition.line >= 0 && currPosition.col >= 0
-            && currPosition.line <= this.maze.size - 1 && currPosition.col <= this.maze.size - 1
-            && this.maze.displayMaze[currPosition.line][currPosition.col].content === '0') {
-          this.maze.displayMaze[currPosition.line][currPosition.col].wasVisited = true;
-        }
+        this.maze.displayMaze[path[i].line][path[i].col].wasVisited = true;
       }
     },
     clearConsole() {
@@ -246,7 +225,7 @@ export default {
             this.outputList.push(data.content);
             break;
           case 'result':
-            //this.walkPath(data.content);
+            this.walkPath(data.content);
             this.lastPath = data.content;
             break;
           case 'status':
@@ -256,7 +235,7 @@ export default {
                 break;
               case 'update':
                 console.log(data.content);
-                //this.walkPath(data.content);
+                this.walkPath(data.content);
                 break;
               case 'execution':
                 if (data.content === 'started') {
@@ -307,13 +286,13 @@ export default {
             splitLines[i][j] = { wasVisited: false, content: cell };
             switch (splitLines[i][j].content) {
               case 'E': {
-                splitLines[i][j].content = 0;
+                splitLines[i][j].content    = 0;
                 this.maze.position.entrance = { line: i, col: j };
                 break;
               }
               case 'S': {
                 splitLines[i][j].content = 0;
-                this.maze.position.exit = { line: i, col: j };
+                this.maze.position.exit  = { line: i, col: j };
                 break;
               }
               case 'M': {

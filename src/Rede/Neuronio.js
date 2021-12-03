@@ -5,7 +5,7 @@ export default class Neuronio {
 
     constructor(pesos) {
         this.setPesos(pesos);
-        this.defineFuncao = 0;
+        this.defineFuncao = 1;
     }
 
     setPesos(pesos) {
